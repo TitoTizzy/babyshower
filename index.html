@@ -13,7 +13,7 @@
     />
     <title>Une petite merveille · Jehmara & Myrtho</title>
 
-    <link rel="stylesheet" href="css/invitation.css?v=20261101-clean" />
+    <link rel="stylesheet" href="css/invitation.css?v=20261101-identity" />
   </head>
   <body data-mood="welcome">
     <div class="scene" aria-hidden="true">
@@ -667,7 +667,31 @@
         </button>
       </div>
     </dialog>
-    <script src="js/config.js?v=20261101-clean"></script>
-    <script src="js/invitation.js?v=20261101-clean"></script>
+    <dialog
+      id="distance-gift-dialog"
+      class="other-gifts-dialog"
+      aria-labelledby="distance-gift-title"
+      aria-describedby="distance-gift-description"
+    >
+      <span class="pill">On pense à toi, même de loin</span>
+      <h2 id="distance-gift-title">
+        Tu veux quand même participer et offrir un cadeau ?
+      </h2>
+      <p id="distance-gift-description">
+        On comprend tout à fait que tu ne puisses pas venir. Si tu as envie
+        d’offrir une petite attention à bébé, la liste est là pour toi. Et si tu
+        préfères simplement partager notre joie, ça nous fait déjà très plaisir.
+        Aucune obligation.
+      </p>
+      <div class="actions">
+        <button id="distance-gift-yes" class="btn" type="button">Oui</button
+        ><button id="distance-gift-no" class="btn quiet" type="button">
+          Non
+        </button>
+      </div>
+      <p id="distance-gift-error" class="error" role="alert"></p>
+    </dialog>
+    <script src="js/config.js?v=20261101-identity"></script>
+    <script src="js/invitation.js?v=20261101-identity"></script>
   </body>
 </html>

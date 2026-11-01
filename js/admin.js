@@ -40,7 +40,9 @@ const zoneLabels = {
   abroad: "À l’étranger",
 };
 function isRemote(row) {
-  return row.residence_zone === "abroad";
+  return (
+    ["abroad", "haiti_other"].includes(row.residence_zone) && !row.attending
+  );
 }
 function zoneLabel(row) {
   return zoneLabels[row.residence_zone] || "Non précisé";

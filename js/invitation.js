@@ -19,6 +19,7 @@ const state = {
   saved: false,
   submitting: false,
   otherGiftsOpen: false,
+  remembered: false,
 };
 const screen = document.getElementById("screen");
 const giftGroups = [
@@ -346,6 +347,8 @@ function go(step, direction = 1) {
     transitioning = false;
     if (step === "reveal") celebrate();
     if (step === "gifts") refreshGifts();
+    if (step === "distant-no")
+      document.getElementById("distance-gift-dialog").showModal();
   };
   if (motionReduced.matches) {
     finish();
@@ -393,6 +396,11 @@ function render() {
     submitted: 7,
     "already-submitted": 7,
     stop: 4,
+    "distant-attendance": 4,
+    "distant-yes": 4,
+    "distant-no": 4,
+    "memory-check": 7,
+    remembered: 7,
   };
   const stage = stages[state.step] || 1;
   document.getElementById("step-label").textContent =
@@ -441,6 +449,35 @@ function render() {
     case "name":
       html = `<h2>Pour qu’on garde<br>le contact</h2><p class="copy">${state.residenceZone === "abroad" ? "Même de loin, on veut garder le lien avec toi. Laisse-nous tes coordonnées pour qu’on puisse partager les nouvelles de bébé." : "Laisse-nous tes coordonnées pour qu’on puisse te préciser l’heure et les derniers détails."}</p><form id="name-form"><label for="full-name">Nom complet</label><input id="full-name" name="name" autocomplete="name" autocapitalize="words" enterkeyhint="next" spellcheck="false" required minlength="2" maxlength="120" value="${escapeHtml(state.fullName)}" placeholder="Prénom et nom"><label for="phone">Numéro de téléphone</label><input id="phone" name="tel" type="tel" inputmode="tel" autocomplete="tel" enterkeyhint="next" required minlength="7" maxlength="40" value="${escapeHtml(state.phone)}" placeholder="${state.residenceZone === "abroad" ? "Numéro avec indicatif du pays" : "Ex. : +509 1234 5678"}">${state.residenceZone === "abroad" ? `<label for="country">Pays de résidence</label><input id="country" name="country-name" autocomplete="country-name" required minlength="2" maxlength="80" value="${escapeHtml(state.country)}" placeholder="Ex. : Canada, France, États-Unis">` : ""}<label for="address">Adresse</label><textarea id="address" name="street-address" autocomplete="street-address" enterkeyhint="done" required minlength="5" maxlength="500" placeholder="Quartier, rue, numéro et ville">${escapeHtml(state.address)}</textarea><p class="small">Tes coordonnées restent entre nous, pour l’organisation du baby shower. Elles ne sont pas visibles par les autres invités.</p><div class="actions"><button class="btn" type="submit">Suivant →</button></div></form>`;
       break;
+    case "memory-check":
+      html =
+        '<h2>Un petit instant…</h2><p class="copy">On vérifie si ta réponse est déjà enregistrée.</p><p id="memory-error" class="error" role="status"></p><div class="actions"><button type="button" class="btn" data-action="check-memory">Vérifier à nouveau</button></div>';
+      break;
+    case "remembered":
+      html =
+        '<span class="pill">C’est déjà bien reçu</span><h2>On a déjà<br>ta réponse !</h2><p class="copy">Merci d’avoir pris le temps de nous répondre. Tout est enregistré, pas besoin de recommencer. Si tu veux changer quelque chose, écris-nous directement.</p><div class="actions">' +
+        button("Retrouver la surprise", "reveal-choice") +
+        "</div>";
+      break;
+    case "distant-attendance":
+      html =
+        '<span class="pill">De près ou de loin, tu comptes pour nous</span><h2>Penses-tu pouvoir être présent le 13 ?</h2><p class="copy">On sait que la distance peut compliquer les choses. On aurait tellement aimé t’avoir avec nous, mais surtout, aucune pression.</p><div class="note">La fête aura lieu le <strong>13 décembre 2026 à Pèlerin 6</strong>. Avec ou sans cadeau, tu as toute ta place.</div><div class="actions">' +
+        button("Oui", "distant-yes-answer") +
+        button("Non", "distant-no-answer", "quiet") +
+        "</div>";
+      break;
+    case "distant-yes":
+      html =
+        '<span class="pill">Quelle belle nouvelle !</span><h2>Parfait !<br>On a hâte de te retrouver.</h2><p class="copy">Ça nous fait tellement plaisir de savoir que tu pourras être avec nous le 13. On te précisera l’heure bientôt.</p><div class="note">Ta présence suffit à nous faire plaisir. Tu n’as aucune obligation d’offrir un cadeau.</div><div class="actions">' +
+        button("On continue →", "gift-choice") +
+        "</div>";
+      break;
+    case "distant-no":
+      html =
+        '<span class="pill">La distance ne change rien</span><h2>On comprend,<br>et on pense fort à toi.</h2><p class="copy">Tu vas nous manquer, mais on sait que ce n’est pas toujours possible de faire le déplacement. Même de loin, tu comptes beaucoup pour nous.</p><div class="actions">' +
+        button("Continuer", "distance-gift-open") +
+        '</div><p id="error" class="error" role="alert"></p>';
+      break;
     case "continue":
       html = `<span class="pill">${state.residenceZone === "abroad" ? "La distance ne change rien" : "Le plus beau cadeau, c’est toi"}</span><h2>${escapeHtml(state.fullName)},<br>${state.residenceZone === "abroad" ? "tu fais partie de la fête, même de loin." : state.residenceZone === "haiti_other" ? "si tu peux faire le déplacement, on sera ravis !" : "tu viens fêter ça avec nous ?"}</h2><p class="copy">${state.residenceZone === "abroad" ? "On aurait aimé t’avoir tout près, mais tu as toute ta place dans cette belle aventure. On a pensé à toi aussi en préparant cette invitation." : state.residenceZone === "haiti_other" ? "On sait que venir jusqu’à Pèlerin 6 demande de s’organiser. Aucune pression : tu pourras nous dire si le déplacement est possible pour toi." : "Ça nous ferait tellement plaisir de t’avoir avec nous pour fêter l’arrivée de bébé."}</p><div class="note"><strong>${state.residenceZone === "abroad" ? "Tu n’as absolument rien à offrir." : "Tu n’as absolument rien à offrir pour venir."}</strong> ${state.residenceZone === "abroad" ? "Partager notre joie avec toi nous fait déjà très plaisir." : "Ce qui nous ferait plaisir, c’est de passer ce moment avec toi."}</div><p>On continue ?</p><div class="actions">${button("Oui, je continue", "gift-choice")}${button("Non, je m’arrête ici", "stop", "quiet")}</div>`;
       break;
@@ -454,21 +491,36 @@ function render() {
       html = `<span class="pill">Une attention, si tu le souhaites</span><h2>Une liste pour<br>accueillir bébé.</h2><p class="gift-instruction">Si tu as envie de nous gâter, tu peux choisir <strong>plusieurs idées à la fois</strong>. Pour éviter les doublons entre proches, on réserve tes choix dès que tu confirmes ta réponse à la prochaine étape.</p><p class="small">La marque, c’est toi qui choisis. Et offrir un cadeau reste entièrement facultatif.</p>${!configured ? '<div class="note">Mode aperçu : les réservations entre invités nécessitent la connexion à Supabase.</div>' : ""}<p id="gift-notice" class="error" role="status">${escapeHtml(state.giftNotice)}</p><div class="availability-tools"><span class="small">${availabilityLoading ? "Vérification des disponibilités…" : availabilityReady ? "Disponibilités actualisées" : "Disponibilités non vérifiées"}</span><button type="button" class="back" data-action="refresh-gifts">Actualiser</button></div><form id="gift-form"><div class="gift-summary"><strong id="gift-count" role="status" aria-live="polite"></strong><span>Choix multiples</span><button type="button" class="jump-gifts" data-action="gift-end">Voir la suite ↓</button></div>${renderGiftGroups(false)}<section class="other-gifts-invite"><h3>D’autres idées, seulement si tu en as envie</h3><p class="small">On a mis les équipements plus importants dans une liste à part. C’est entièrement facultatif.</p><button type="button" id="other-gifts-trigger" class="btn secondary" data-action="other-gifts" aria-haspopup="dialog" aria-controls="other-gifts-dialog" aria-expanded="${state.otherGiftsOpen}" ${state.otherGiftsOpen ? "hidden" : ""}>Voir les autres cadeaux</button><div id="other-gifts" ${state.otherGiftsOpen ? "" : "hidden"}>${state.otherGiftsOpen ? renderGiftGroups(true) : ""}</div></section><label class="check"><input id="wants-gift" type="checkbox" ${state.wantsGift ? "checked" : ""}>Je propose de donner autre chose</label><label id="gift-finish" for="proposal">Proposer un cadeau</label><textarea id="proposal" maxlength="500" placeholder="Tu as une autre idée ? Dis-nous ce qui te ferait plaisir d’offrir.">${escapeHtml(state.proposal)}</textarea><p class="small">Encore une étape : confirme ta réponse sur la page suivante pour qu’on garde tes cadeaux de côté.</p><div class="actions"><button class="btn" type="submit">Continuer →</button></div></form>`;
       break;
     case "rsvp":
-      html =
-        state.residenceZone === "abroad"
-          ? `<span class="pill">Avec nous, à distance</span><h2>${escapeHtml(state.country)},<br>c’est loin… mais toi, tu es tout près.</h2><p class="copy">On sait que tu ne pourras pas être là physiquement le 13 décembre. On ne te demande donc pas de confirmer une présence sur place.</p><div class="distance-summary"><strong>On garde le lien.</strong><br>${state.selectedGifts.length ? `Tu as choisi ${state.selectedGifts.length} idée${state.selectedGifts.length > 1 ? "s" : ""} de cadeau. On pourra s’organiser ensemble pour la suite.` : state.wantsGift ? "Merci pour ta petite attention ! On pourra en reparler ensemble." : "Ton affection nous fait déjà tellement plaisir."}</div><p class="copy">Envoie-nous ta réponse pour continuer vers notre petite surprise.</p><div class="actions">${button("Envoyer ma réponse →", "distance-confirm")}</div><p id="error" class="error" role="alert"></p>`
-          : `<span class="pill">Ta réponse</span><h2>${state.residenceZone === "haiti_other" ? "Tu pourras faire<br>le déplacement ?" : "Alors, tu seras là ?"}</h2><p class="copy">${state.residenceZone === "haiti_other" ? "Si tu peux nous rejoindre, ce sera le" : "On t’attend le"} <strong>13 décembre 2026 à Pèlerin 6</strong>. On te précisera l’heure bientôt.</p><div class="note">${state.residenceZone === "haiti_other" ? "Si le déplacement n’est pas possible, on comprend tout à fait. " : ""}Tu peux venir avec une personne, si tu veux. Une seule, pour qu’on puisse bien accueillir tout le monde.</div><label class="check"><input id="companion" type="checkbox" ${state.companion ? "checked" : ""}>Oui, je viens avec une personne</label><div class="actions">${button(state.residenceZone === "haiti_other" ? "Oui, je ferai le déplacement" : "Oui, je serai là", "yes")}${button("Je ne pourrai pas venir", "no", "quiet")}</div><p id="error" class="error" role="alert"></p><p class="small">Ta réponse reste entre nous : elle nous aide simplement à préparer la fête.</p>`;
+      if (state.residenceZone !== "metro") {
+        html = state.attending
+          ? '<span class="pill">On te garde une place</span><h2>On t’attend le 13 !</h2><p class="copy">À Pèlerin 6, le 13 décembre 2026. On te précisera l’heure bientôt.</p><div class="note">Tu peux venir avec une personne, si tu veux.</div><label class="check"><input id="companion" type="checkbox" ' +
+            (state.companion ? "checked" : "") +
+            '>Oui, je viens avec une personne</label><div class="actions">' +
+            button("Confirmer ma réponse →", "confirm-route") +
+            '</div><p id="error" class="error" role="alert"></p>'
+          : '<span class="pill">Avec nous, à distance</span><h2>Merci de penser<br>à nous et à bébé.</h2><p class="copy">Même si tu ne peux pas venir, ta petite attention nous touche beaucoup. On pourra s’organiser ensemble pour les cadeaux.</p><p class="copy">Confirme ta réponse pour réserver tes choix, puis retrouver notre petite surprise.</p><div class="actions">' +
+            button("Confirmer ma réponse →", "confirm-route") +
+            '</div><p id="error" class="error" role="alert"></p>';
+      } else {
+        html =
+          '<span class="pill">Ta réponse</span><h2>Alors, tu seras là ?</h2><p class="copy">On t’attend le <strong>13 décembre 2026 à Pèlerin 6</strong>. On te précisera l’heure bientôt.</p><div class="note">Tu peux venir avec une personne, si tu veux. Une seule, pour qu’on puisse bien accueillir tout le monde.</div><label class="check"><input id="companion" type="checkbox" ' +
+          (state.companion ? "checked" : "") +
+          '>Oui, je viens avec une personne</label><div class="actions">' +
+          button("Oui, je serai là", "yes") +
+          button("Je ne pourrai pas venir", "no", "quiet") +
+          '</div><p id="error" class="error" role="alert"></p>';
+      }
       break;
     case "submitted":
       html = state.saved
-        ? `<div class="submission-success"><div class="success-check" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="m11 25 9 9 18-20"/></svg></div><span class="confirmation-label">Confirmation</span><h2>C’est bien reçu !</h2><p class="copy">Merci ${escapeHtml(state.fullName)} ! Ta réponse a bien été enregistrée${state.selectedGifts.length ? " et tes cadeaux sont réservés" : ""}.</p>${state.selectedGifts.length ? `<ul class="confirmation-list" aria-label="Cadeaux réservés">${state.selectedGifts.map((g) => `<li>${escapeHtml(g)}</li>`).join("")}</ul>` : ""}${state.proposal ? '<p class="copy">On a aussi bien reçu ta proposition de cadeau.</p>' : ""}<p class="small">Pas besoin de remplir l’invitation une deuxième fois. Si tu veux changer quelque chose, écris-nous directement.</p><div class="actions">${button(state.residenceZone === "abroad" || state.attending || state.wantsGift ? "Découvrir la suite →" : "Terminer →", "after-submit")}</div></div>`
+        ? `<div class="submission-success"><div class="success-check" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="m11 25 9 9 18-20"/></svg></div><span class="confirmation-label">Confirmation</span><h2>C’est bien reçu !</h2><p class="copy">Merci ${escapeHtml(state.fullName)} ! Ta réponse a bien été enregistrée${state.selectedGifts.length ? " et tes cadeaux sont réservés" : ""}.</p>${state.selectedGifts.length ? `<ul class="confirmation-list" aria-label="Cadeaux réservés">${state.selectedGifts.map((g) => `<li>${escapeHtml(g)}</li>`).join("")}</ul>` : ""}${state.proposal ? '<p class="copy">On a aussi bien reçu ta proposition de cadeau.</p>' : ""}<p class="small">Pas besoin de remplir l’invitation une deuxième fois. Si tu veux changer quelque chose, écris-nous directement.</p><div class="actions">${button(state.residenceZone !== "metro" || state.attending || state.wantsGift ? "Découvrir la suite →" : "Terminer →", "after-submit")}</div></div>`
         : `<div class="preview-confirmation"><h2>Aperçu uniquement</h2><p>Cette réponse n’a pas été enregistrée et aucun cadeau n’a été réservé.</p></div><div class="actions">${button("Voir la suite de l’aperçu", "after-submit")}</div>`;
       break;
     case "already-submitted":
-      html = `<span class="pill">On a déjà ta réponse</span><h2>Pas besoin de<br>recommencer.</h2><div class="note duplicate-notice">On a déjà reçu une réponse avec ce numéro de téléphone. Aucune nouvelle réponse ni réservation n’a été ajoutée.</div><p class="copy">Si tu veux modifier ta réponse ou tes cadeaux, écris-nous directement. Si tu t’es trompé de numéro, tu peux corriger tes coordonnées.</p><div class="actions">${button("Vérifier mes coordonnées", "edit-contact")}</div>`;
+      html = `<span class="pill">On a déjà ta réponse</span><h2>Pas besoin de<br>recommencer.</h2><div class="note duplicate-notice">On a déjà reçu une réponse avec ce nom complet ou ce numéro de téléphone. Aucune nouvelle réponse ni réservation n’a été ajoutée.</div><p class="copy">Si tu veux modifier ta réponse ou tes cadeaux, écris-nous directement. Si tu t’es trompé de numéro, tu peux corriger tes coordonnées.</p><div class="actions">${button("Vérifier mes coordonnées", "edit-contact")}</div>`;
       break;
     case "reveal-choice":
-      html = `<span class="pill">${state.saved ? "Ta réponse est enregistrée" : "Aperçu de la suite"}</span><h2>Tu veux savoir<br>ou tu gardes la surprise ?</h2><p class="copy">${state.residenceZone === "abroad" ? "Merci d’être avec nous dans cette aventure, même à distance !" : state.attending ? "On a trop hâte de te retrouver !" : "Merci de penser à nous, même si tu ne peux pas être là. Ça nous touche beaucoup."}</p><p>Tu veux qu’on te dise <strong>si c’est une fille ou un garçon</strong> maintenant ? Ou tu préfères attendre le 13 décembre pour le découvrir ?</p><div class="actions">${button("Oui, je veux savoir !", "reveal")}${button("Je garde la surprise pour le 13", "surprise", "secondary")}</div>`;
+      html = `<span class="pill">${state.saved ? "Ta réponse est enregistrée" : "Aperçu de la suite"}</span><h2>Tu veux savoir<br>ou tu gardes la surprise ?</h2><p class="copy">${state.remembered ? "On est heureux de partager cette nouvelle avec toi." : state.attending ? "On a trop hâte de te retrouver !" : "On comprend que tu ne puisses pas venir. Même de loin, tu comptes pour nous et on veut partager cette surprise avec toi."}</p><p>Tu veux qu’on te dise <strong>si c’est une fille ou un garçon</strong> maintenant ? Ou tu préfères attendre le 13 décembre pour le découvrir ?</p><div class="actions">${button("Oui, je veux savoir !", "reveal")}${button("Je garde la surprise pour le 13", "surprise", "secondary")}</div>`;
       break;
     case "reveal":
       html = `<div class="reveal"><span class="symbol" aria-hidden="true"><svg viewBox="0 0 100 120" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M24 58Q6 78 30 111q20 14 41-1Q96 77 75 58" fill="#fff5df"/><path d="M26 60q23 15 48 0M24 68l44 39M77 69l-46 41M30 89l30 24" stroke="#a99578"/><circle cx="37" cy="77" r="3" fill="#bfd7f4" stroke="none"/><circle cx="64" cy="82" r="3" fill="#f0bdd1" stroke="none"/><circle cx="46" cy="100" r="2.5" fill="#f0bdd1" stroke="none"/><circle cx="60" cy="99" r="2.5" fill="#bfd7f4" stroke="none"/><circle cx="50" cy="39" r="26" fill="#fff4ed"/><path d="M24 35q-8-7-9 3t10 10m50-13q9-7 10 3t-10 10M44 14q-2-11 7-10t-2 10M36 39q4-5 8 0m13 0q4-5 8 0m-19 9q5 7 10 0"/><path d="M33 47h4m26 0h4" stroke="#d58ead"/></svg></span><p class="eyebrow">Notre petite merveille</p><h2>C’est un garçon !</h2><p class="copy">Déjà tellement aimé, avant même son premier regard.</p><div class="note">Son arrivée est prévue le <strong>8 février 2027</strong>.</div><p class="copy">Mais chut… garde ça entre nous ! Certains de nos proches préfèrent attendre le 13 décembre pour le découvrir.</p></div>`;
@@ -482,7 +534,8 @@ function render() {
   }
   screen.innerHTML =
     html +
-    (order.includes(state.step) && idx > 0 && idx < 7
+    ((order.includes(state.step) && idx > 0 && idx < 7) ||
+    ["distant-attendance", "distant-yes", "distant-no"].includes(state.step)
       ? '<button class="back" type="button" data-action="back"><svg style="transform:rotate(180deg)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>Retour</button>'
       : "");
   updateGiftSummary();
@@ -555,7 +608,7 @@ screen.addEventListener("submit", (e) => {
     state.phone = phone;
     state.address = address;
     state.country = country;
-    go("continue");
+    go(state.residenceZone === "metro" ? "continue" : "distant-attendance");
   }
   if (e.target.id === "gift-form") {
     state.proposal = document.getElementById("proposal").value.trim();
@@ -591,6 +644,7 @@ screen.addEventListener("click", async (e) => {
   const btn = e.target.closest("[data-action]");
   if (!btn) return;
   const a = btn.dataset.action;
+  if (state.submitting) return;
   if (!motionReduced.matches && Number.isFinite(e.clientX)) {
     const wave = document.createElement("i");
     wave.className = "reply-burst";
@@ -598,6 +652,20 @@ screen.addEventListener("click", async (e) => {
     wave.style.top = e.clientY + "px";
     document.body.appendChild(wave);
     setTimeout(() => wave.remove(), 650);
+  }
+  if (a === "check-memory") {
+    await checkBrowserMemory();
+    return;
+  }
+  if (a === "distant-yes-answer" || a === "distant-no-answer") {
+    state.attending = a === "distant-yes-answer";
+    state.companion = false;
+    go(state.attending ? "distant-yes" : "distant-no");
+    return;
+  }
+  if (a === "distance-gift-open") {
+    document.getElementById("distance-gift-dialog").showModal();
+    return;
   }
   if (a === "other-gifts") {
     captureGiftForm();
@@ -608,7 +676,7 @@ screen.addEventListener("click", async (e) => {
   if (a === "after-submit") {
     if (configured && !state.saved) return;
     go(
-      state.residenceZone === "abroad" || state.attending || state.wantsGift
+      state.residenceZone !== "metro" || state.attending || state.wantsGift
         ? "reveal-choice"
         : "thanks",
     );
@@ -630,12 +698,10 @@ screen.addEventListener("click", async (e) => {
     return;
   }
   if (a === "gift-end") {
-    document
-      .getElementById("gift-finish")
-      .scrollIntoView({
-        behavior: motionReduced.matches ? "instant" : "smooth",
-        block: "start",
-      });
+    document.getElementById("gift-finish").scrollIntoView({
+      behavior: motionReduced.matches ? "instant" : "smooth",
+      block: "start",
+    });
     return;
   }
   if (a === "refresh-gifts") {
@@ -648,49 +714,28 @@ screen.addEventListener("click", async (e) => {
       location: "welcome",
       name: "location",
       continue: "name",
-      "gift-choice": "continue",
-      gifts: "gift-choice",
-      rsvp: "gift-choice",
+      "distant-attendance": "name",
+      "distant-yes": "distant-attendance",
+      "distant-no": "distant-attendance",
+      "gift-choice":
+        state.residenceZone === "metro" ? "continue" : "distant-yes",
+      gifts:
+        state.residenceZone !== "metro" && !state.attending
+          ? "distant-no"
+          : "gift-choice",
+      rsvp:
+        state.residenceZone !== "metro" && !state.attending
+          ? "gifts"
+          : "gift-choice",
     };
     go(prev[state.step], -1);
     return;
   }
-  if (a === "yes" || a === "no" || a === "distance-confirm") {
-    if (state.submitting || state.saved) return;
-    state.submitting = true;
-    state.attending = state.residenceZone !== "abroad" && a === "yes";
+  if (a === "yes" || a === "no" || a === "confirm-route") {
+    if (a !== "confirm-route") state.attending = a === "yes";
     state.companion =
       state.attending && Boolean(document.getElementById("companion")?.checked);
-    screen.querySelectorAll("button").forEach((b) => (b.disabled = true));
-    btn.textContent = "Envoi en cours…";
-    try {
-      await saveResponse();
-      go("submitted");
-    } catch (err) {
-      if (err.message === "response_already_submitted") {
-        go("already-submitted");
-        return;
-      }
-      if (err.message === "gift_unavailable") {
-        state.giftNotice =
-          "Un autre invité a confirmé un de tes cadeaux avant toi. Ta réponse n’a pas été enregistrée. Vérifie les cadeaux disponibles, puis confirme à nouveau.";
-        go("gifts", -1);
-        return;
-      }
-      document.getElementById("error").textContent =
-        "Ta réponse n’a pas été enregistrée. Vérifie ta connexion puis réessaie.";
-      screen.querySelectorAll("button").forEach((b) => (b.disabled = false));
-      btn.textContent =
-        a === "distance-confirm"
-          ? "Envoyer ma réponse →"
-          : a === "yes"
-            ? state.residenceZone === "haiti_other"
-              ? "Oui, je ferai le déplacement"
-              : "Oui, je serai là"
-            : "Je ne pourrai pas venir";
-    } finally {
-      state.submitting = false;
-    }
+    await submitInvitation(btn);
     return;
   }
   go(a);
@@ -731,6 +776,7 @@ async function saveResponse() {
     throw new Error("Enregistrement impossible");
   }
   state.saved = true;
+  rememberSubmission();
 }
 const card = document.querySelector(".card");
 card.addEventListener("pointermove", (e) => {
@@ -750,5 +796,150 @@ document
 otherGiftsDialog.addEventListener("close", () =>
   document.body.classList.remove("other-gifts-open"),
 );
+const receiptKey = "babyshower:receipt:" + config.supabaseUrl;
+let memoryRequest = 0;
+function readReceipt() {
+  try {
+    const token = localStorage.getItem(receiptKey);
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      token || "",
+    )
+      ? token
+      : null;
+  } catch {
+    return null;
+  }
+}
+function rememberSubmission() {
+  try {
+    localStorage.setItem(receiptKey, state.id);
+  } catch {}
+}
+async function checkBrowserMemory() {
+  const token = readReceipt();
+  if (!configured || !token) {
+    if (state.step === "memory-check" || state.remembered) {
+      state.saved = false;
+      state.remembered = false;
+      state.step = "welcome";
+      render();
+    }
+    return;
+  }
+  const request = ++memoryRequest;
+  state.step = "memory-check";
+  render();
+  try {
+    const response = await fetch(
+      config.supabaseUrl.replace(/\/$/, "") +
+        "/rest/v1/rpc/baby_shower_receipt_exists",
+      {
+        method: "POST",
+        headers: {
+          apikey: config.supabaseKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ p_token: token }),
+        signal: AbortSignal.timeout(15000),
+        cache: "no-store",
+      },
+    );
+    if (!response.ok) throw new Error("receipt_check_failed");
+    const exists = await response.json();
+    if (typeof exists !== "boolean") throw new Error("invalid_status");
+    if (request !== memoryRequest) return;
+    if (exists) {
+      state.saved = true;
+      state.remembered = true;
+      state.step = "remembered";
+    } else {
+      try {
+        localStorage.removeItem(receiptKey);
+      } catch {}
+      state.saved = false;
+      state.remembered = false;
+      state.step = "welcome";
+    }
+    render();
+  } catch {
+    if (request === memoryRequest) {
+      document.getElementById("memory-error").textContent =
+        "Impossible de vérifier ta réponse pour le moment. Réessaie quand la connexion revient.";
+    }
+  }
+}
+async function submitInvitation(
+  button,
+  { directReveal = false, errorId = "error" } = {},
+) {
+  if (state.submitting || state.saved) return;
+  state.submitting = true;
+  const text = button.textContent;
+  screen.querySelectorAll("button").forEach((b) => (b.disabled = true));
+  document
+    .querySelectorAll("#distance-gift-dialog button")
+    .forEach((b) => (b.disabled = true));
+  button.textContent = "Envoi en cours…";
+  try {
+    await saveResponse();
+    document.getElementById("distance-gift-dialog").close();
+    go(directReveal ? "reveal-choice" : "submitted");
+  } catch (err) {
+    if (err.message === "response_already_submitted") {
+      document.getElementById("distance-gift-dialog").close();
+      go("already-submitted");
+    } else if (err.message === "gift_unavailable") {
+      state.giftNotice =
+        "Un proche vient de réserver une de tes idées. Ta réponse n’a pas été enregistrée. Vérifie la liste et confirme à nouveau.";
+      go("gifts", -1);
+    } else {
+      const error = document.getElementById(errorId);
+      if (error)
+        error.textContent =
+          "Ta réponse n’a pas été confirmée. Vérifie ta connexion puis réessaie.";
+    }
+  } finally {
+    state.submitting = false;
+    screen.querySelectorAll("button").forEach((b) => (b.disabled = false));
+    document
+      .querySelectorAll("#distance-gift-dialog button")
+      .forEach((b) => (b.disabled = false));
+    if (button.isConnected) button.textContent = text;
+  }
+}
+const distanceGiftDialog = document.getElementById("distance-gift-dialog");
+document.getElementById("distance-gift-yes").addEventListener("click", () => {
+  if (state.submitting) return;
+  state.wantsGift = true;
+  distanceGiftDialog.close();
+  go("gifts");
+});
+document
+  .getElementById("distance-gift-no")
+  .addEventListener("click", async (event) => {
+    if (state.submitting) return;
+    state.attending = false;
+    state.companion = false;
+    state.wantsGift = false;
+    state.selectedGifts = [];
+    state.proposal = "";
+    await submitInvitation(event.currentTarget, {
+      directReveal: true,
+      errorId: "distance-gift-error",
+    });
+  });
+distanceGiftDialog.addEventListener("cancel", (event) => {
+  if (state.submitting) event.preventDefault();
+});
+window.addEventListener("storage", (event) => {
+  if (event.key === receiptKey && event.newValue && !state.submitting) {
+    document.querySelectorAll("dialog[open]").forEach((d) => d.close());
+    checkBrowserMemory();
+  }
+});
+window.addEventListener("pageshow", (event) => {
+  if (event.persisted) checkBrowserMemory();
+});
 render();
 screen.classList.add("entering");
+checkBrowserMemory();

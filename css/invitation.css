@@ -4027,3 +4027,7 @@ body[data-mood="reveal"] .stage-halo {
 body[data-mood="reveal"] .progress i.active {
   background: linear-gradient(90deg, #77baff, #c3e7ff);
 }
+
+/* Les décorations ne doivent pas élargir la page sur téléphone. */
+html { overflow-x: hidden; }
+@supports (overflow: clip) { html { overflow-x: clip; } }
