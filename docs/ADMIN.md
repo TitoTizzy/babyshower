@@ -76,3 +76,13 @@ Après un envoi confirmé, une page avec un check vert récapitule les cadeaux r
 Exécuter sql/supabase-migration-cadeaux-categories.sql après les migrations déjà installées. Cette mise à jour réorganise le catalogue en 40 idées principales et 10 équipements plus importants. Elle fusionne les produits lavants et les serviettes, conserve les réservations avec les nouveaux noms et actualise les cadeaux dans les anciennes réponses. Les anciens articles sont désactivés, pas supprimés du catalogue. Si deux personnes ont réservé des articles désormais fusionnés, le script s’arrête avec gift_merge_conflict : départager les réservations dans le Dashboard avant de réessayer.
 
 La rubrique « Autres cadeaux » s’ouvre seulement après confirmation dans un pop-up. Choisir Non, Échap ou revenir plus tard n’affiche pas ces articles. Les gros cadeaux gardent la sélection multiple et l’unicité de réservation. Pour un cadeau à plusieurs, une seule personne réserve pour le groupe ; aucun paiement partagé n’est intégré. La limite de cadeaux en base suit désormais la taille du catalogue actif.
+
+## Supprimer les réponses de test
+
+Base existante : exécuter une fois `sql/supabase-migration-admin-reset.sql`. Installer cette migration ne supprime aucune donnée. Une nouvelle base inclut cette fonction via `sql/supabase.sql`.
+
+Dans l’admin, cocher les réponses de test (ou sélectionner les réponses affichées après filtrage), puis « Supprimer la sélection… ». Vérifier tous les noms dans la fenêtre et saisir SUPPRIMER. Les sélections restent actives à travers les filtres ; la fenêtre récapitule la sélection complète. Le site ne déduit pas automatiquement qu’une réponse est un test. Limite : 500 réponses par opération.
+
+La suppression est définitive. Elle enlève uniquement les réponses sélectionnées et leurs réservations, libère leurs numéros de téléphone pour un nouvel essai et conserve le catalogue, les comptes Auth et les droits administrateur. Exporter le CSV avant si une sauvegarde est nécessaire. Le serveur vérifie auth.uid() et la liste des administrateurs ; les visiteurs anonymes et comptes non autorisés ne peuvent pas exécuter cette fonction. Une sélection périmée échoue sans suppression partielle.
+
+Aucune réponse n’a été supprimée lors de l’installation du code.

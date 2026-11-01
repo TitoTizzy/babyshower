@@ -2607,3 +2607,96 @@ select {
     grid-template-columns: 1fr;
   }
 }
+
+/* Nettoyage volontaire des réponses, réservé aux administrateurs. */
+.reset-tools {
+  margin: 22px 0;
+  padding: 20px;
+  border: 1px solid #f29bc65c;
+  border-radius: 18px;
+  background: #aa286522;
+}
+.reset-tools h3 {
+  margin-top: 0;
+}
+.reset-tools p {
+  font-size: 15px;
+}
+.reset-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  padding: 10px 0;
+  cursor: pointer;
+}
+.reset-row input {
+  width: 22px;
+  height: 22px;
+  accent-color: #b92c78;
+  flex-shrink: 0;
+}
+.reset-dialog {
+  width: min(92vw, 620px);
+  max-height: 88dvh;
+  overflow: auto;
+  padding: 28px;
+  color: #f6eeff;
+  background: linear-gradient(135deg, #173c80, #542b64);
+  border: 1px solid #d5b7e677;
+  border-radius: 24px;
+  box-shadow: 0 25px 80px #07102b80;
+}
+.reset-dialog::backdrop {
+  background: #050c2bc9;
+  backdrop-filter: blur(6px);
+}
+.reset-dialog h2 {
+  font-size: 29px;
+}
+.reset-dialog p,
+.reset-dialog li {
+  overflow-wrap: anywhere;
+}
+.reset-dialog ul {
+  max-height: 180px;
+  overflow: auto;
+  padding-left: 22px;
+}
+.reset-dialog .toolbar {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+.reset-dialog .toolbar .btn {
+  flex: 1;
+  min-width: 150px;
+}
+.reset-dialog input {
+  font-size: 17px;
+}
+.reset-dialog #reset-error {
+  color: #ffd1e3;
+}
+.admin-theme .reset-tools .btn:disabled,
+.reset-dialog .btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+@media (max-width: 760px) {
+  .reset-tools {
+    padding: 16px;
+  }
+  .reset-tools .toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .reset-dialog {
+    padding: 22px;
+  }
+  .reset-dialog .toolbar {
+    flex-direction: column;
+  }
+}

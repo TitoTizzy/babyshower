@@ -60,6 +60,7 @@ function resetSession(message = "") {
   requestController?.abort();
   clearTimeout(expiryTimer);
   session = null;
+  clearResetSelection();
   snapshot = { responses: [], gifts: [] };
   $("dashboard").hidden = true;
   $("login-panel").hidden = false;
@@ -145,7 +146,7 @@ function renderResponses() {
     ? rows
         .map(
           (row) =>
-            `<article class="response"><div class="response-head"><h3>${escapeHtml(row.full_name)}</h3><span class="badge ${isRemote(row) ? "distance" : row.attending ? "" : "absent"}">${isRemote(row) ? "À distance" : row.attending ? "Participe" : "Ne participe pas"}</span></div><p class="response-meta">${isRemote(row) ? "À distance · aucune présence sur place" : row.attending ? (row.companion ? "Avec 1 accompagnant · 2 personnes" : "Sans accompagnant · 1 personne") : "Absent"} · ${escapeHtml(formatDate(row.created_at))}</p><p class="route-details">${escapeHtml(zoneLabel(row))}${row.country ? " · " + escapeHtml(row.country) : ""}</p><div class="contact-details"><p><strong>Téléphone</strong><br>${escapeHtml(row.phone || "Non renseigné")}</p><p class="contact-address"><strong>Adresse</strong><br>${escapeHtml(row.address || "Non renseignée")}</p></div>${
+            `<article class="response"><label class="reset-row"><input type="checkbox" data-reset-id="${escapeHtml(row.id)}" ${resetSelection.has(row.id) ? "checked" : ""} ${resetBusy ? "disabled" : ""}>Sélectionner pour suppression</label><div class="response-head"><h3>${escapeHtml(row.full_name)}</h3><span class="badge ${isRemote(row) ? "distance" : row.attending ? "" : "absent"}">${isRemote(row) ? "À distance" : row.attending ? "Participe" : "Ne participe pas"}</span></div><p class="response-meta">${isRemote(row) ? "À distance · aucune présence sur place" : row.attending ? (row.companion ? "Avec 1 accompagnant · 2 personnes" : "Sans accompagnant · 1 personne") : "Absent"} · ${escapeHtml(formatDate(row.created_at))}</p><p class="route-details">${escapeHtml(zoneLabel(row))}${row.country ? " · " + escapeHtml(row.country) : ""}</p><div class="contact-details"><p><strong>Téléphone</strong><br>${escapeHtml(row.phone || "Non renseigné")}</p><p class="contact-address"><strong>Adresse</strong><br>${escapeHtml(row.address || "Non renseignée")}</p></div>${
               selectedGifts(row).length
                 ? `<ul class="gift-chips" aria-label="Cadeaux sélectionnés">${selectedGifts(
                     row,
@@ -207,6 +208,10 @@ async function loadDashboard() {
     if (!Array.isArray(data?.responses) || !Array.isArray(data?.gifts))
       throw new Error("invalid_data");
     snapshot = data;
+    for (const id of resetSelection)
+      if (!data.responses.some((row) => row.id === id))
+        resetSelection.delete(id);
+    updateResetSelection();
     renderDashboard();
     $("dashboard-message").textContent = "";
     return true;
@@ -340,3 +345,116 @@ $("export").addEventListener("click", () => {
 window.addEventListener("pagehide", () => resetSession());
 $("setup-notice").hidden = configured;
 $("login-button").disabled = !configured;
+
+const resetSelection = new Set();
+let resetBusy = false;
+let pendingResetIds = [];
+function updateResetSelection() {
+  $("reset-count").textContent =
+    `${resetSelection.size} réponse(s) sélectionnée(s)`;
+  $("reset-open").disabled = !resetSelection.size || resetBusy;
+}
+function clearResetSelection() {
+  resetSelection.clear();
+  pendingResetIds = [];
+  $("reset-confirmation").value = "";
+  $("reset-error").textContent = "";
+  $("reset-submit").disabled = true;
+  if ($("reset-dialog").open) $("reset-dialog").close();
+  updateResetSelection();
+}
+$("response-list").addEventListener("change", (event) => {
+  const input = event.target.closest("input[data-reset-id]");
+  if (!input || resetBusy) return;
+  if (input.checked) resetSelection.add(input.dataset.resetId);
+  else resetSelection.delete(input.dataset.resetId);
+  updateResetSelection();
+});
+$("reset-select-visible").addEventListener("click", () => {
+  if (resetBusy) return;
+  for (const row of filteredResponses()) {
+    if (resetSelection.size >= 500) break;
+    resetSelection.add(row.id);
+  }
+  renderResponses();
+  updateResetSelection();
+});
+$("reset-clear").addEventListener("click", () => {
+  if (resetBusy) return;
+  clearResetSelection();
+  renderResponses();
+});
+$("reset-open").addEventListener("click", () => {
+  if (!session || resetBusy || !resetSelection.size) return;
+  const rows = snapshot.responses.filter((row) => resetSelection.has(row.id));
+  pendingResetIds = rows.map((row) => row.id);
+  $("reset-names").innerHTML = rows
+    .map(
+      (row) =>
+        `<li>${escapeHtml(row.full_name)} — ${escapeHtml(row.phone || "Sans téléphone")}</li>`,
+    )
+    .join("");
+  $("reset-summary").textContent =
+    `${rows.length} réponse(s) seront supprimées. Leurs réservations seront libérées et ces numéros pourront répondre à nouveau. Cette suppression est définitive.`;
+  $("reset-confirmation").value = "";
+  $("reset-error").textContent = "";
+  $("reset-submit").disabled = true;
+  $("reset-dialog").showModal();
+});
+$("reset-confirmation").addEventListener("input", () => {
+  $("reset-submit").disabled =
+    resetBusy || $("reset-confirmation").value !== "SUPPRIMER";
+});
+$("reset-cancel").addEventListener("click", () => {
+  if (!resetBusy) $("reset-dialog").close();
+});
+$("reset-dialog").addEventListener("cancel", (event) => {
+  if (resetBusy) event.preventDefault();
+});
+$("reset-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (
+    !session ||
+    resetBusy ||
+    !pendingResetIds.length ||
+    $("reset-confirmation").value !== "SUPPRIMER"
+  )
+    return;
+  resetBusy = true;
+  const token = session.access_token;
+  $("reset-submit").disabled = true;
+  $("reset-cancel").disabled = true;
+  $("reset-confirmation").disabled = true;
+  $("reset-error").textContent = "Suppression en cours…";
+  try {
+    const result = await api("/rest/v1/rpc/admin_reset_baby_shower_responses", {
+      token,
+      body: { p_response_ids: pendingResetIds, p_confirmation: "SUPPRIMER" },
+    });
+    if (session?.access_token !== token) return;
+    clearResetSelection();
+    const loaded = await loadDashboard();
+    if (loaded) {
+      $("dashboard-message").className = "muted";
+      $("dashboard-message").textContent =
+        `${result.deleted} réponse(s) supprimée(s), ${result.released_gifts} cadeau(x) libéré(s).`;
+    }
+  } catch (error) {
+    if (session?.access_token !== token) return;
+    if (error.status === 401 || error.status === 403) {
+      resetSession("Reconnecte-toi avec un compte administrateur autorisé.");
+    } else {
+      $("reset-error").textContent =
+        error.message === "selection_changed"
+          ? "La sélection a changé. Annule, actualise les réponses et recommence."
+          : "La suppression n’a pas été confirmée. Vérifie la migration reset et la connexion. Avant de réessayer après une coupure, actualise les réponses pour vérifier le résultat.";
+    }
+  } finally {
+    resetBusy = false;
+    $("reset-cancel").disabled = false;
+    $("reset-confirmation").disabled = false;
+    $("reset-submit").disabled = $("reset-confirmation").value !== "SUPPRIMER";
+    updateResetSelection();
+  }
+});
+updateResetSelection();

@@ -10,10 +10,10 @@
     <meta name="referrer" content="no-referrer" />
     <meta name="theme-color" content="#153e80" />
     <title>Administration · Baby Shower</title>
-    <script src="js/config.js?v=20261101-clean" defer></script>
-    <script src="js/admin.js?v=20261101-clean" defer></script>
+    <script src="js/config.js?v=20261101-reset" defer></script>
+    <script src="js/admin.js?v=20261101-reset" defer></script>
 
-    <link rel="stylesheet" href="css/admin.css?v=20261101-clean" />
+    <link rel="stylesheet" href="css/admin.css?v=20261101-reset" />
   </head>
   <body class="admin-theme">
     <div class="ambient" aria-hidden="true"></div>
@@ -147,6 +147,32 @@
               </select>
             </div>
           </div>
+          <section
+            class="reset-tools"
+            aria-label="Nettoyer les réponses de test"
+          >
+            <h3>Nettoyage des tests</h3>
+            <p>
+              Sélectionne uniquement les réponses à effacer. Le site ne peut pas
+              reconnaître automatiquement un test. Les sélections restent
+              actives quand tu changes les filtres.
+            </p>
+            <div class="toolbar">
+              <button
+                id="reset-select-visible"
+                class="btn subtle"
+                type="button"
+              >
+                Sélectionner les réponses affichées (500 max.)</button
+              ><button id="reset-clear" class="btn rose" type="button">
+                Tout désélectionner
+              </button>
+            </div>
+            <p id="reset-count" role="status" aria-live="polite"></p>
+            <button id="reset-open" class="btn rose" type="button" disabled>
+              Supprimer la sélection…
+            </button>
+          </section>
           <p class="small muted" id="result-count"></p>
           <div id="response-list" class="response-list"></div>
         </section>
@@ -164,5 +190,33 @@
       </section>
     </main>
     <footer>Un moment précieux, une organisation toute simple.</footer>
+    <dialog
+      id="reset-dialog"
+      class="reset-dialog"
+      aria-labelledby="reset-title"
+      aria-describedby="reset-summary"
+    >
+      <h2 id="reset-title">Supprimer ces réponses ?</h2>
+      <p id="reset-summary"></p>
+      <ul id="reset-names"></ul>
+      <form id="reset-form">
+        <label for="reset-confirmation">Écris SUPPRIMER pour confirmer</label
+        ><input
+          id="reset-confirmation"
+          autocomplete="off"
+          spellcheck="false"
+          required
+          pattern="SUPPRIMER"
+        />
+        <p id="reset-error" role="alert"></p>
+        <div class="toolbar">
+          <button id="reset-cancel" class="btn" type="button" autofocus>
+            Annuler</button
+          ><button id="reset-submit" class="btn rose" type="submit" disabled>
+            Supprimer définitivement
+          </button>
+        </div>
+      </form>
+    </dialog>
   </body>
 </html>
