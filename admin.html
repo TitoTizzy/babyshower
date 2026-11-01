@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="robots" content="noindex,nofollow" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="theme-color" content="#153e80" />
+    <title>Administration · Baby Shower</title>
+    <script src="js/config.js?v=20261101-clean" defer></script>
+    <script src="js/admin.js?v=20261101-clean" defer></script>
+
+    <link rel="stylesheet" href="css/admin.css?v=20261101-clean" />
+  </head>
+  <body class="admin-theme">
+    <div class="ambient" aria-hidden="true"></div>
+    <header>
+      <a class="brand" href="index.html"
+        >Jehmara & Myrtho <span>ESPACE PRIVÉ</span></a
+      ><a href="index.html" class="link">Voir l’invitation ↗</a>
+    </header>
+    <main>
+      <section id="login-panel" class="glass login">
+        <span class="eyebrow">L’organisation, en toute sérénité</span>
+        <h1>Bienvenue<br />dans les coulisses.</h1>
+        <p>
+          Retrouve les réponses de tes proches et les cadeaux qu’ils souhaitent
+          offrir.
+        </p>
+        <div id="setup-notice" class="notice" hidden>
+          Supabase n’est pas encore configuré. Complète
+          <code>js/config.js</code> et suis <code>docs/ADMIN.md</code> pour
+          activer cet espace.
+        </div>
+        <form id="login-form">
+          <label for="email">Adresse e-mail administrateur</label
+          ><input
+            id="email"
+            type="email"
+            autocomplete="username"
+            required
+            placeholder="ton-adresse@exemple.com"
+          /><label for="password">Mot de passe</label
+          ><input
+            id="password"
+            type="password"
+            autocomplete="current-password"
+            required
+          /><button id="login-button" class="btn" type="submit">
+            Se connecter →
+          </button>
+        </form>
+        <p id="login-error" class="error" role="alert"></p>
+        <p class="muted small">
+          Accès réservé aux comptes autorisés. La session se termine à la
+          fermeture ou au rechargement de cette page.
+        </p>
+      </section>
+      <section
+        id="dashboard"
+        hidden
+        aria-label="Tableau de bord administrateur"
+      >
+        <div class="heading">
+          <div>
+            <span class="eyebrow">Baby Shower · 13 décembre 2026</span>
+            <h1>Vos proches, réunis.</h1>
+            <p id="account" class="muted"></p>
+          </div>
+          <div class="toolbar">
+            <button id="refresh" class="btn" type="button">Actualiser</button
+            ><button id="logout" class="btn rose" type="button">
+              Se déconnecter
+            </button>
+          </div>
+        </div>
+        <p id="dashboard-message" role="status" aria-live="polite"></p>
+        <div class="stats" aria-label="Résumé">
+          <article class="glass stat">
+            <span>Réponses reçues</span><strong id="stat-total">0</strong>
+          </article>
+          <article class="glass stat">
+            <span>Invités présents</span><strong id="stat-attending">0</strong>
+          </article>
+          <article class="glass stat">
+            <span>Accompagnants</span><strong id="stat-companions">0</strong>
+          </article>
+          <article class="glass stat">
+            <span>Personnes attendues au total</span
+            ><strong id="stat-headcount">0</strong>
+          </article>
+          <article class="glass stat">
+            <span>Cadeaux réservés</span><strong id="stat-gifts">0</strong>
+          </article>
+          <article class="glass stat">
+            <span>Proches à l’étranger</span
+            ><strong id="stat-distance">0</strong>
+          </article>
+        </div>
+        <section class="glass responses">
+          <div class="section-heading">
+            <div>
+              <h2>Les réponses</h2>
+              <p class="muted small" id="updated"></p>
+            </div>
+            <button id="export" class="btn subtle" type="button">
+              Exporter les réponses (.csv)
+            </button>
+          </div>
+          <div class="filters">
+            <div>
+              <label for="search"
+                >Rechercher un nom, un contact ou un cadeau</label
+              ><input
+                id="search"
+                type="search"
+                placeholder="Nom, téléphone, adresse ou cadeau…"
+              />
+            </div>
+            <div>
+              <label for="attendance-filter">Présence</label
+              ><select id="attendance-filter">
+                <option value="all">Toutes les réponses</option>
+                <option value="yes">Participants</option>
+                <option value="no">Absents en Haïti</option>
+                <option value="distance">À distance (étranger)</option>
+              </select>
+            </div>
+            <div>
+              <label for="gift-filter">Cadeaux</label
+              ><select id="gift-filter">
+                <option value="all">Tous</option>
+                <option value="yes">Avec une intention de cadeau</option>
+                <option value="no">Sans intention de cadeau</option>
+              </select>
+            </div>
+            <div>
+              <label for="location-filter">Lieu de résidence</label
+              ><select id="location-filter">
+                <option value="all">Tous les lieux</option>
+                <option value="metro">Zone métropolitaine</option>
+                <option value="haiti_other">Ailleurs en Haïti</option>
+                <option value="abroad">Étranger</option>
+              </select>
+            </div>
+          </div>
+          <p class="small muted" id="result-count"></p>
+          <div id="response-list" class="response-list"></div>
+        </section>
+        <section class="glass reservations">
+          <div class="section-heading">
+            <div>
+              <h2>Qui offre quoi ?</h2>
+              <p class="muted">
+                Les réservations confirmées et les idées encore disponibles.
+              </p>
+            </div>
+          </div>
+          <div id="gift-list" class="catalog"></div>
+        </section>
+      </section>
+    </main>
+    <footer>Un moment précieux, une organisation toute simple.</footer>
+  </body>
+</html>
