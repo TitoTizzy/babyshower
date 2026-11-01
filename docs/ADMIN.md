@@ -36,7 +36,7 @@ L’espace permet de lire/exporter les réponses et de supprimer une sélection 
 
 La connexion utilise Supabase Auth par e-mail et mot de passe. La fonction SQL vérifie `auth.uid()` dans une liste privée d'administrateurs avant de retourner les données. Un compte connecté sans autorisation ne peut pas consulter les réponses. Les noms et les réponses ne sont pas exposés par l'API de disponibilité publique des cadeaux.
 
-Le jeton d'accès reste uniquement en mémoire, sans localStorage ni cookie de session géré par cette page. Un rechargement demande une nouvelle connexion. La session expire avant l'expiration du jeton ; le mot de passe n'est jamais enregistré dans le code. Utiliser HTTPS après publication.
+La session admin est conservée dans localStorage (jetons Supabase d’accès et de renouvellement, adresse du compte et date de dernière consultation), jamais le mot de passe. Le délai de sept jours repart à chaque consultation ou interaction visible ; les renouvellements techniques en arrière-plan ne le prolongent pas. Après sept jours sans consultation, la session locale est effacée et une nouvelle connexion est demandée. Les jetons courts sont renouvelés automatiquement avec rotation, et un verrou navigateur coordonne les onglets. « Se déconnecter » efface la session sur ce navigateur et tente sa révocation Supabase. Les droits administrateur sont revérifiés par le serveur à chaque chargement. La persistance dépend de la disponibilité du stockage local et des paramètres de session Supabase. Utiliser HTTPS après publication.
 
 Pour retirer un administrateur, supprimer sa ligne dans `baby_shower_admins` depuis le Dashboard Supabase. Les prochaines lectures seront refusées. Pour des raisons de confidentialité, seules les personnes organisant l'événement doivent être autorisées.
 
@@ -94,3 +94,7 @@ Exécuter `sql/supabase-migration-identite-parcours.sql` sur la base existante a
 Après un envoi confirmé uniquement, l’invitation mémorise un jeton UUID aléatoire dans localStorage, sans nom, téléphone ni adresse. À chaque ouverture, le serveur confirme seulement l’existence de ce jeton : le formulaire est remplacé par « On a déjà ta réponse ». Si la réponse a été supprimée via le reset, le jeton local est retiré et le formulaire redevient accessible. Une vérification réseau indisponible affiche une invitation à réessayer. Sans stockage local disponible, la protection serveur reste active. La mémoire dépend du navigateur et du domaine utilisé. Aucun code SMS, CAPTCHA ou lien personnel n’est ajouté.
 
 L’administration compte comme présent un proche hors zone ou à l’étranger ayant répondu Oui. Le filtre « À distance » regroupe ceux de ces deux zones qui ont répondu Non. Le reset libère le nom, le téléphone, les cadeaux et la mémoire locale lors de la prochaine vérification du serveur.
+
+## Vérifications de session persistante
+
+Le mot de passe n’est jamais mémorisé. Recharger ou fermer/rouvrir le navigateur avant sept jours d’inactivité restaure la session et recharge les données depuis le serveur. Les réponses privées ne sont pas enregistrées dans localStorage. Une erreur réseau ne supprime pas les jetons ; une session révoquée ou un compte devenu non autorisé provoque une déconnexion. Aucune migration SQL supplémentaire n’est nécessaire pour la mémorisation.

@@ -57,7 +57,14 @@ function hasGift(row) {
     Boolean(row.gift_proposal?.trim())
   );
 }
-function resetSession(message = "") {
+function resetSession(message = "", removeStored = true) {
+  authEpoch++;
+  clearTimeout(refreshTimer);
+  if (removeStored) {
+    try {
+      localStorage.removeItem(adminSessionKey);
+    } catch {}
+  }
   requestVersion++;
   requestController?.abort();
   clearTimeout(expiryTimer);
@@ -79,7 +86,13 @@ function resetSession(message = "") {
   $("gift-filter").value = "all";
   $("location-filter").value = "all";
 }
-async function api(path, { body, token, signal } = {}) {
+async function api(path, { body, token, signal, retry = true } = {}) {
+  if (token && session) {
+    await ensureAdminSession();
+    if (!session)
+      throw Object.assign(new Error("session_expired"), { status: 401 });
+    token = session.access_token;
+  }
   const response = await fetch(settings.supabaseUrl.replace(/\/$/, "") + path, {
     method: "POST",
     headers: {
@@ -94,6 +107,16 @@ async function api(path, { body, token, signal } = {}) {
   });
   const data = await response.json().catch(() => null);
   if (!response.ok) {
+    if (response.status === 401 && token && session && retry) {
+      await ensureAdminSession(true);
+      if (session)
+        return api(path, {
+          body,
+          token: session.access_token,
+          signal,
+          retry: false,
+        });
+    }
     const error = new Error(data?.message || data?.msg || "request_failed");
     error.status = response.status;
     throw error;
@@ -257,12 +280,8 @@ $("login-form").addEventListener("submit", async (event) => {
       !Number.isFinite(data.expires_in)
     )
       throw new Error("invalid_session");
-    session = { access_token: data.access_token };
+    acceptAdminSession(data);
     $("password").value = "";
-    expiryTimer = setTimeout(
-      () => resetSession("Ta session a expiré. Connecte-toi à nouveau."),
-      Math.max(0, (data.expires_in - 30) * 1000),
-    );
     const loaded = await loadDashboard();
     if (!session) return;
     if (loaded) {
@@ -289,7 +308,7 @@ $("login-form").addEventListener("submit", async (event) => {
 $("logout").addEventListener("click", () => {
   const token = session?.access_token;
   resetSession("Tu es déconnecté.");
-  if (token) api("/auth/v1/logout", { token }).catch(() => {});
+  if (token) api("/auth/v1/logout?scope=local", { token }).catch(() => {});
 });
 $("refresh").addEventListener("click", loadDashboard);
 $("search").addEventListener("input", renderResponses);
@@ -344,7 +363,10 @@ $("export").addEventListener("click", () => {
   link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 });
-window.addEventListener("pagehide", () => resetSession());
+window.addEventListener("pagehide", () => {
+  clearTimeout(refreshTimer);
+  requestController?.abort();
+});
 $("setup-notice").hidden = configured;
 $("login-button").disabled = !configured;
 
@@ -423,6 +445,7 @@ $("reset-form").addEventListener("submit", async (event) => {
   )
     return;
   resetBusy = true;
+  const activeSession = session;
   const token = session.access_token;
   $("reset-submit").disabled = true;
   $("reset-cancel").disabled = true;
@@ -433,7 +456,7 @@ $("reset-form").addEventListener("submit", async (event) => {
       token,
       body: { p_response_ids: pendingResetIds, p_confirmation: "SUPPRIMER" },
     });
-    if (session?.access_token !== token) return;
+    if (session !== activeSession) return;
     clearResetSelection();
     const loaded = await loadDashboard();
     if (loaded) {
@@ -442,7 +465,7 @@ $("reset-form").addEventListener("submit", async (event) => {
         `${result.deleted} réponse(s) supprimée(s), ${result.released_gifts} cadeau(x) libéré(s).`;
     }
   } catch (error) {
-    if (session?.access_token !== token) return;
+    if (session !== activeSession) return;
     if (error.status === 401 || error.status === 403) {
       resetSession("Reconnecte-toi avec un compte administrateur autorisé.");
     } else {
@@ -460,3 +483,215 @@ $("reset-form").addEventListener("submit", async (event) => {
   }
 });
 updateResetSelection();
+
+const adminSessionKey = "babyshower:admin-session:" + settings.supabaseUrl;
+const adminInactivityMs = 7 * 24 * 60 * 60 * 1000;
+let refreshTimer = null,
+  refreshPromise = null,
+  authEpoch = 0;
+function storedAdminSession() {
+  try {
+    const data = JSON.parse(localStorage.getItem(adminSessionKey));
+    return data &&
+      typeof data.access_token === "string" &&
+      typeof data.refresh_token === "string" &&
+      typeof data.email === "string" &&
+      Number.isFinite(data.expires_at) &&
+      Number.isFinite(data.last_seen)
+      ? data
+      : null;
+  } catch {
+    return null;
+  }
+}
+function persistAdminSession() {
+  if (!session) return;
+  try {
+    localStorage.setItem(adminSessionKey, JSON.stringify(session));
+  } catch {}
+}
+function scheduleAdminSession() {
+  clearTimeout(expiryTimer);
+  clearTimeout(refreshTimer);
+  if (!session) return;
+  const remaining = session.last_seen + adminInactivityMs - Date.now();
+  expiryTimer = setTimeout(
+    () =>
+      resetSession(
+        "Ta connexion a expiré après 7 jours sans consultation. Connecte-toi à nouveau.",
+      ),
+    Math.max(0, remaining),
+  );
+  if (document.visibilityState === "visible")
+    refreshTimer = setTimeout(
+      () => ensureAdminSession().catch(() => {}),
+      Math.max(1000, session.expires_at - Date.now() - 60000),
+    );
+}
+function touchAdminSession() {
+  if (!session || document.visibilityState !== "visible") return;
+  if (Date.now() - session.last_seen >= adminInactivityMs) {
+    resetSession("Ta connexion a expiré après 7 jours sans consultation.");
+    return;
+  }
+  if (Date.now() - session.last_seen > 30000) {
+    session.last_seen = Date.now();
+    persistAdminSession();
+    scheduleAdminSession();
+  }
+}
+function acceptAdminSession(data, lastSeen = Date.now()) {
+  if (
+    !data?.access_token ||
+    !data?.refresh_token ||
+    !data?.user?.email ||
+    !Number.isFinite(data.expires_in)
+  )
+    throw new Error("invalid_session");
+  session = {
+    access_token: data.access_token,
+    refresh_token: data.refresh_token,
+    email: data.user.email,
+    expires_at: Date.now() + data.expires_in * 1000,
+    last_seen: lastSeen,
+  };
+  persistAdminSession();
+  scheduleAdminSession();
+}
+async function ensureAdminSession(force = false) {
+  if (!session) return;
+  if (Date.now() - session.last_seen >= adminInactivityMs) {
+    resetSession("Ta connexion a expiré après 7 jours sans consultation.");
+    throw Object.assign(new Error("session_expired"), { status: 401 });
+  }
+  if (!force && session.expires_at > Date.now() + 60000) return;
+  if (refreshPromise) return refreshPromise;
+  const epoch = authEpoch;
+  const originalAccess = session.access_token;
+  const refresh = async () => {
+    if (epoch !== authEpoch || !session) return;
+    const shared = storedAdminSession();
+    if (shared?.last_seen > session.last_seen)
+      session.last_seen = shared.last_seen;
+    if (shared && shared.refresh_token !== session.refresh_token) {
+      Object.assign(session, shared);
+      if (session.expires_at > Date.now() + 60000) return;
+    }
+    if (
+      session.expires_at > Date.now() + 60000 &&
+      (!force || session.access_token !== originalAccess)
+    ) {
+      scheduleAdminSession();
+      return;
+    }
+    const data = await api("/auth/v1/token?grant_type=refresh_token", {
+      body: { refresh_token: session.refresh_token },
+    });
+    if (epoch !== authEpoch || !session) return;
+    if (
+      !data?.access_token ||
+      !data?.refresh_token ||
+      !Number.isFinite(data.expires_in)
+    )
+      throw new Error("invalid_session");
+    Object.assign(session, {
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
+      expires_at: Date.now() + data.expires_in * 1000,
+    });
+    persistAdminSession();
+    scheduleAdminSession();
+  };
+  refreshPromise = (async () => {
+    try {
+      // Le verrou inter-onglets évite de renouveler deux fois le même refresh token.
+      if (navigator.locks)
+        await navigator.locks.request(adminSessionKey, refresh);
+      else await refresh();
+    } catch (error) {
+      if (epoch === authEpoch) {
+        if ([400, 401, 403].includes(error.status))
+          resetSession("Ta session n’est plus valide. Connecte-toi à nouveau.");
+        else {
+          clearTimeout(refreshTimer);
+          refreshTimer = setTimeout(
+            () => ensureAdminSession().catch(() => {}),
+            30000,
+          );
+        }
+      }
+      throw error;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+  return refreshPromise;
+}
+async function restoreAdminSession() {
+  if (!configured) return;
+  const saved = storedAdminSession();
+  if (!saved) return;
+  if (Date.now() - saved.last_seen >= adminInactivityMs) {
+    resetSession(
+      "Ta connexion a expiré après 7 jours sans consultation. Connecte-toi à nouveau.",
+    );
+    return;
+  }
+  session = saved;
+  $("login-button").disabled = true;
+  $("login-error").textContent = "Reconnexion en cours…";
+  try {
+    await ensureAdminSession();
+    const loaded = await loadDashboard();
+    if (!session) return;
+    if (loaded) {
+      session.last_seen = Date.now();
+      persistAdminSession();
+      scheduleAdminSession();
+      $("login-panel").hidden = true;
+      $("dashboard").hidden = false;
+      $("account").textContent = "Connecté en tant que " + session.email;
+      $("login-error").textContent = "";
+    } else
+      $("login-error").textContent =
+        "La session est conservée, mais les données ne sont pas accessibles pour le moment. Réessaie en actualisant la page.";
+  } catch {
+    if (session)
+      $("login-error").textContent =
+        "Reconnexion momentanément impossible. Réessaie en actualisant la page.";
+  } finally {
+    $("login-button").disabled = !configured;
+  }
+}
+for (const event of ["pointerdown", "keydown", "scroll"])
+  document.addEventListener(event, touchAdminSession, { passive: true });
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && session) {
+    touchAdminSession();
+    ensureAdminSession().catch(() => {});
+  } else {
+    clearTimeout(refreshTimer);
+  }
+});
+window.addEventListener("pageshow", (event) => {
+  if (event.persisted) {
+    if (session) {
+      touchAdminSession();
+      ensureAdminSession().catch(() => {});
+    } else restoreAdminSession();
+  }
+});
+window.addEventListener("storage", (event) => {
+  if (event.key !== adminSessionKey) return;
+  if (!event.newValue) {
+    if (session)
+      resetSession("Tu as été déconnecté dans un autre onglet.", false);
+    return;
+  }
+  const shared = storedAdminSession();
+  if (session && shared) {
+    Object.assign(session, shared);
+    scheduleAdminSession();
+  }
+});
+restoreAdminSession();

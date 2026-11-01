@@ -10,10 +10,10 @@
     <meta name="referrer" content="no-referrer" />
     <meta name="theme-color" content="#153e80" />
     <title>Administration · Baby Shower</title>
-    <script src="js/config.js?v=20261101-identity" defer></script>
-    <script src="js/admin.js?v=20261101-identity" defer></script>
+    <script src="js/config.js?v=20261101-session7" defer></script>
+    <script src="js/admin.js?v=20261101-session7" defer></script>
 
-    <link rel="stylesheet" href="css/admin.css?v=20261101-identity" />
+    <link rel="stylesheet" href="css/admin.css?v=20261101-session7" />
   </head>
   <body class="admin-theme">
     <div class="ambient" aria-hidden="true"></div>
@@ -55,8 +55,8 @@
         </form>
         <p id="login-error" class="error" role="alert"></p>
         <p class="muted small">
-          Accès réservé aux comptes autorisés. La session se termine à la
-          fermeture ou au rechargement de cette page.
+          Accès réservé aux comptes autorisés. Tu restes connecté pendant 7
+          jours après ta dernière consultation, même si tu fermes le navigateur.
         </p>
       </section>
       <section
@@ -126,7 +126,9 @@
                 <option value="all">Toutes les réponses</option>
                 <option value="yes">Participants</option>
                 <option value="no">Absents de la zone métropolitaine</option>
-                <option value="distance">À distance (hors zone ou étranger)</option>
+                <option value="distance">
+                  À distance (hors zone ou étranger)
+                </option>
               </select>
             </div>
             <div>
