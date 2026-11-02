@@ -3997,7 +3997,7 @@ html {
 .heart-photo-frame {
   position: relative;
   width: 100%;
-  aspect-ratio: 1.04;
+  aspect-ratio: 0.8;
   padding: 6px;
   clip-path: url(#couple-heart-shape);
   background: linear-gradient(
@@ -4008,12 +4008,22 @@ html {
     #ffcee5 92%
   );
 }
+.heart-photo-frame::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  clip-path: url(#couple-heart-shape);
+  background: radial-gradient(ellipse at 30% 25%, #3563b6, transparent 65%), linear-gradient(145deg, #173d80, #883369);
+}
 .heart-photo-frame img {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: 50% calc(36% + 5mm);
+  object-position: center;
+  object-fit: contain;
+  padding: 22% 22% 30%;
+  position: relative;
+  z-index: 1;
   clip-path: url(#couple-heart-shape);
 }
 .couple-photo figcaption {
