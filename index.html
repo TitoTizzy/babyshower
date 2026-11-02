@@ -13,7 +13,7 @@
     />
     <title>Une petite merveille · Jehmara & Myrtho</title>
 
-    <link rel="stylesheet" href="css/invitation.css?v=20261101-identity" />
+    <link rel="stylesheet" href="css/invitation.css?v=20261101-heart" />
   </head>
   <body data-mood="welcome">
     <div class="scene" aria-hidden="true">
@@ -409,14 +409,34 @@
           </div>
         </div>
         <figure class="couple-photo">
-          <img
-            src="images/jehmara-myrtho.webp"
-            width="820"
-            height="1457"
-            fetchpriority="high"
-            decoding="async"
-            alt="Jehmara et Myrtho, les futurs parents, assis ensemble"
-          />
+          <svg
+            class="heart-clip-defs"
+            width="0"
+            height="0"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <defs>
+              <clipPath
+                id="couple-heart-shape"
+                clipPathUnits="objectBoundingBox"
+              >
+                <path
+                  d="M .5 .205 C .365 -.025 .055 -.025 .03 .265 C .005 .495 .295 .77 .5 .97 C .705 .77 .995 .495 .97 .265 C .945 -.025 .635 -.025 .5 .205 Z"
+                />
+              </clipPath>
+            </defs>
+          </svg>
+          <div class="heart-photo-frame">
+            <img
+              src="images/jehmara-myrtho.webp"
+              width="820"
+              height="1457"
+              fetchpriority="high"
+              decoding="async"
+              alt="Jehmara et Myrtho, les futurs parents, assis ensemble"
+            />
+          </div>
           <figcaption>Jehmara & Myrtho · Bientôt trois ♡</figcaption>
         </figure>
       </aside>
@@ -691,7 +711,7 @@
       </div>
       <p id="distance-gift-error" class="error" role="alert"></p>
     </dialog>
-    <script src="js/config.js?v=20261101-identity"></script>
-    <script src="js/invitation.js?v=20261101-identity"></script>
+    <script src="js/config.js?v=20261101-heart"></script>
+    <script src="js/invitation.js?v=20261101-heart"></script>
   </body>
 </html>
