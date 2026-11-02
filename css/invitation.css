@@ -4013,7 +4013,9 @@ html {
   position: absolute;
   inset: 6px;
   clip-path: url(#couple-heart-shape);
-  background: radial-gradient(ellipse at 30% 25%, #3563b6, transparent 65%), linear-gradient(145deg, #173d80, #883369);
+  background:
+    radial-gradient(ellipse at 30% 25%, #3563b6, transparent 65%),
+    linear-gradient(145deg, #173d80, #883369);
 }
 .heart-photo-frame img {
   display: block;
@@ -4051,5 +4053,63 @@ html {
 @media (max-width: 1000px) and (max-height: 500px) and (orientation: landscape) {
   .couple-photo {
     width: 200px;
+  }
+}
+
+/* Bulles de savon : 24 trajectoires renouvelées indépendamment en JavaScript. */
+.bubble-field {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  contain: strict;
+}
+.floating-bubble {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--bubble-size);
+  height: var(--bubble-size);
+  border-radius: 50%;
+  opacity: 0.35;
+  pointer-events: none;
+  border: 1px solid hsl(var(--bubble-hue) 92% 86% / 0.72);
+  background:
+    radial-gradient(circle at 28% 22%, #ffffffb3, transparent 19%),
+    radial-gradient(
+      circle at 65% 76%,
+      hsl(var(--bubble-hue) 95% 76% / 0.25),
+      transparent 65%
+    ),
+    radial-gradient(circle at 35% 35%, #ffffff0d, transparent 60%);
+  box-shadow:
+    inset 2px 3px 7px #ffffff24,
+    inset -3px -4px 8px hsl(var(--bubble-hue) 95% 75% / 0.18);
+  will-change: transform, opacity;
+}
+.floating-bubble:after {
+  content: "";
+  position: absolute;
+  left: 18%;
+  top: 14%;
+  width: 23%;
+  height: 13%;
+  border-radius: 50%;
+  background: #ffffffb3;
+  transform: rotate(-35deg);
+}
+body[data-mood="reveal"] .floating-bubble {
+  --bubble-hue: 212 !important;
+}
+@media (max-width: 760px) {
+  .floating-bubble {
+    width: calc(var(--bubble-size) * 0.72);
+    height: calc(var(--bubble-size) * 0.72);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .floating-bubble {
+    will-change: auto;
+    opacity: 0.25;
   }
 }
