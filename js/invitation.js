@@ -21,6 +21,7 @@ const state = {
   otherGiftsOpen: false,
   remembered: false,
   giftAccessToken: null,
+  responseSummary: null,
 };
 const screen = document.getElementById("screen");
 const { groups: giftGroups, sketchPaths } = window.BABY_SHOWER_GIFT_CATALOG;
@@ -346,7 +347,11 @@ function render() {
       break;
     case "remembered":
       html =
-        '<span class="pill">C’est déjà bien reçu</span><h2>On a déjà<br>ta réponse !</h2><p class="copy">Merci d’avoir pris le temps de nous répondre. Tout est enregistré, pas besoin de recommencer. Si tu veux changer quelque chose, écris-nous directement.</p><div class="actions">' +
+        '<span class="pill">Ta réponse est bien enregistrée</span><h2>On a déjà<br>ta réponse !</h2><p class="copy">Merci ' +
+        escapeHtml(state.fullName) +
+        " ! Tu peux retrouver ici le résumé de tes choix. Si tu veux changer quelque chose, écris-nous directement.</p>" +
+        responseSummaryMarkup() +
+        '<div class="actions">' +
         button("Retrouver la surprise", "reveal-choice") +
         personalGiftButton() +
         "</div>";
@@ -714,6 +719,8 @@ async function checkBrowserMemory() {
     if (state.step === "memory-check" || state.remembered) {
       state.saved = false;
       state.remembered = false;
+      state.responseSummary = null;
+      state.giftAccessToken = null;
       state.step = "welcome";
       render();
     }
@@ -725,7 +732,7 @@ async function checkBrowserMemory() {
   try {
     const response = await fetch(
       config.supabaseUrl.replace(/\/$/, "") +
-        "/rest/v1/rpc/baby_shower_receipt_exists",
+        "/rest/v1/rpc/baby_shower_response_summary",
       {
         method: "POST",
         headers: {
@@ -738,10 +745,20 @@ async function checkBrowserMemory() {
       },
     );
     if (!response.ok) throw new Error("receipt_check_failed");
-    const exists = await response.json();
-    if (typeof exists !== "boolean") throw new Error("invalid_status");
+    const summary = await response.json();
+    if (summary !== null && !validResponseSummary(summary))
+      throw new Error("invalid_summary");
     if (request !== memoryRequest) return;
-    if (exists) {
+    if (summary) {
+      state.responseSummary = summary;
+      state.fullName = summary.full_name;
+      state.attending = summary.attending;
+      state.companion = summary.companion;
+      state.wantsGift = summary.wants_gift;
+      state.selectedGifts = [...summary.selected_gifts];
+      state.proposal = summary.proposal;
+      state.residenceZone = summary.residence_zone;
+      state.country = summary.country;
       state.saved = true;
       state.remembered = true;
       state.step = "remembered";
@@ -752,6 +769,8 @@ async function checkBrowserMemory() {
       } catch {}
       state.saved = false;
       state.remembered = false;
+      state.responseSummary = null;
+      state.giftAccessToken = null;
       state.step = "welcome";
     }
     render();
@@ -878,4 +897,56 @@ async function loadPersonalGiftAccess(token) {
         .querySelector(".actions")
         ?.insertAdjacentHTML("beforeend", personalGiftButton());
   } catch {}
+}
+
+function responseSummaryMarkup() {
+  const summary = state.responseSummary;
+  if (!summary) return "";
+  const attendance = summary.attending
+    ? "Oui, tu seras avec nous le 13 décembre."
+    : "Tu ne pourras pas être présent le 13 décembre.";
+  const companion = summary.attending
+    ? summary.companion
+      ? "Tu viendras avec une personne."
+      : "Tu viendras sans accompagnant."
+    : "Aucun accompagnant prévu.";
+  const gifts = summary.selected_gifts.length
+    ? '<ul class="confirmation-list">' +
+      summary.selected_gifts
+        .map((g) => "<li>" + escapeHtml(g) + "</li>")
+        .join("") +
+      "</ul>"
+    : '<p class="copy">' +
+      (summary.wants_gift && !summary.proposal
+        ? "Tu souhaites offrir une attention, sans article précis."
+        : "Tu n’as pas choisi de cadeau dans la liste.") +
+      "</p>";
+  return (
+    '<section class="return-summary" aria-label="Résumé de ta réponse"><h3>Ce qu’on a gardé pour toi</h3><dl class="summary-facts"><div><dt>Ta présence</dt><dd>' +
+    attendance +
+    "</dd></div><div><dt>Avec toi</dt><dd>" +
+    companion +
+    "</dd></div></dl><h3>Tes cadeaux</h3>" +
+    gifts +
+    (summary.proposal
+      ? '<h3>Ton autre idée</h3><p class="summary-proposal">' +
+        escapeHtml(summary.proposal) +
+        "</p>"
+      : "") +
+    "</section>"
+  );
+}
+function validResponseSummary(value) {
+  return (
+    value &&
+    typeof value.full_name === "string" &&
+    typeof value.attending === "boolean" &&
+    typeof value.companion === "boolean" &&
+    typeof value.wants_gift === "boolean" &&
+    Array.isArray(value.selected_gifts) &&
+    value.selected_gifts.every((g) => typeof g === "string") &&
+    typeof value.proposal === "string" &&
+    typeof value.residence_zone === "string" &&
+    typeof value.country === "string"
+  );
 }

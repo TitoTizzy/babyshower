@@ -48,3 +48,7 @@ Sur la base existante, installer `sql/supabase-migration-admin-reset.sql` si né
 ## Accès cadeaux de Marie Gaelle Mentor
 
 Après `sql/supabase-migration-acces-cadeaux.sql`, sa fiche admin permet de récupérer un lien personnel vers `cadeaux.html`. Ce lien donne une consultation continue et des ajouts à sa réponse existante ; il conserve les premiers cadeaux et les propositions, sans ouvrir de second formulaire. Le catalogue commun aux deux parcours est défini dans `js/gift-catalog.js`. Voir `docs/ADMIN.md` pour l’installation et le partage du lien.
+
+## Résumé personnel au retour
+
+Installer `sql/supabase-migration-resume-reponse.sql` sur la base existante pour afficher le résumé des choix au retour sur le lien depuis le navigateur utilisé pour répondre. Le résumé est relu sur le serveur à partir du reçu personnel, sans créer une nouvelle réponse.
