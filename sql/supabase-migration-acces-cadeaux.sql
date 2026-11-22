@@ -1,6 +1,14 @@
 -- Accès personnel aux cadeaux pour Marie Gaelle Mentor, après sa réponse.
 -- Installer cette migration ne modifie aucun cadeau ni aucune réponse.
 begin;
+-- Normalisation nécessaire même si la migration identité n’a pas encore été installée.
+create or replace function public.baby_shower_name_key(p_name text)
+returns text language sql immutable strict set search_path='' as $$
+ select regexp_replace(translate(replace(replace(lower(trim(p_name)),'œ','oe'),'æ','ae'),
+ 'àáâãäåāăąçćčďèéêëēėęěìíîïīįñńňòóôõöøōőřśšşťùúûüūůűųýÿžźż',
+ 'aaaaaaaaacccdeeeeeeeeiiiiiinnnoooooooorssstuuuuuuuuyyzzz'),'[^[:alnum:]]','','g');
+$$;
+revoke all on function public.baby_shower_name_key(text) from public,anon,authenticated;
 create table if not exists public.baby_shower_gift_access (
  access_token uuid primary key default gen_random_uuid(),
  response_id uuid not null unique references public.baby_shower_responses(id) on delete cascade,
