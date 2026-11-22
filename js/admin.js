@@ -179,7 +179,7 @@ function renderResponses() {
                     .map((g) => `<li>${escapeHtml(g)}</li>`)
                     .join("")}</ul>`
                 : `<p class="small muted">${hasGift(row) ? "Souhaite offrir un cadeau, sans article sélectionné." : "Aucun cadeau prévu."}</p>`
-            }${row.gift_proposal ? `<p class="proposal"><strong>Proposition libre</strong><br>${escapeHtml(row.gift_proposal)}</p>` : ""}</article>`,
+            }${row.gift_proposal ? `<p class="proposal"><strong>Proposition libre</strong><br>${escapeHtml(row.gift_proposal)}</p>` : ""}${normalize(row.full_name).replace(/[^a-z0-9]/g, "") === "mariegaellementor" ? `<div class="gift-access-control"><button type="button" class="btn subtle" data-personal-gifts="${escapeHtml(row.id)}">Lien personnel pour ses cadeaux</button><div class="personal-gift-result" hidden role="status"></div></div>` : ""}</article>`,
         )
         .join("")
     : '<div class="empty">' +
@@ -695,3 +695,46 @@ window.addEventListener("storage", (event) => {
   }
 });
 restoreAdminSession();
+
+$("response-list").addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-personal-gifts]");
+  if (!button || !session) return;
+  const currentSession = session;
+  button.disabled = true;
+  const host = button.closest(".gift-access-control");
+  try {
+    const access = await api("/rest/v1/rpc/admin_baby_shower_gift_access", {
+      token: session.access_token,
+      body: { p_response_id: button.dataset.personalGifts },
+    });
+    if (session !== currentSession) return;
+    if (!/^[0-9a-f-]{36}$/i.test(access || ""))
+      throw new Error("invalid_access");
+    const link = new URL("cadeaux.html", location.href);
+    link.hash = access;
+    host.querySelector(".personal-gift-result").innerHTML =
+      `<label>Lien personnel de Marie Gaelle<input type="text" readonly value="${escapeHtml(link.href)}" aria-label="Lien personnel de Marie Gaelle"></label><p class="small">Ce lien lui permet de consulter la liste et d’ajouter des cadeaux à sa réponse existante.</p><button type="button" class="btn subtle" data-copy-personal-gifts>Copier le lien</button>`;
+    host.querySelector(".personal-gift-result").hidden = false;
+  } catch (error) {
+    if (session !== currentSession) return;
+    host.querySelector(".personal-gift-result").textContent =
+      error.status === 401 || error.status === 403
+        ? "Reconnecte-toi avec un compte administrateur autorisé."
+        : "Le lien ne peut pas être récupéré. Vérifie que la migration accès cadeaux est installée, puis réessaie.";
+    host.querySelector(".personal-gift-result").hidden = false;
+  } finally {
+    button.disabled = false;
+  }
+});
+$("response-list").addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-copy-personal-gifts]");
+  if (!button || !session) return;
+  const input = button.closest(".personal-gift-result").querySelector("input");
+  try {
+    await navigator.clipboard.writeText(input.value);
+    button.textContent = "Lien copié ✓";
+  } catch {
+    input.select();
+    button.textContent = "Sélectionné — copie le lien";
+  }
+});

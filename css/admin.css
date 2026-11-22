@@ -2700,3 +2700,22 @@ select {
     flex-direction: column;
   }
 }
+
+.gift-access-control {
+  margin-top: 20px;
+  border-top: 1px solid #d2a0cb44;
+  padding-top: 16px;
+}
+.personal-gift-result {
+  margin-top: 15px;
+}
+.personal-gift-result input {
+  font-size: 14px;
+  width: 100%;
+  min-width: 0;
+}
+.gift-access-control .btn {
+  font-size: 14px;
+  max-width: 100%;
+  white-space: normal;
+}

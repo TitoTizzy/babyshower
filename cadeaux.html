@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="robots" content="noindex,nofollow" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="theme-color" content="#173d80" />
+    <title>Tes cadeaux · Jehmara & Myrtho</title>
+    <link rel="stylesheet" href="css/invitation.css?v=20261121-cadeaux" />
+    <link rel="stylesheet" href="css/gift-access.css?v=20261121" />
+    <script src="js/config.js?v=20261121" defer></script>
+    <script src="js/gift-catalog.js?v=20261121" defer></script>
+    <script src="js/gift-access.js?v=20261121" defer></script>
+    <script src="js/bubbles.js?v=20261121" defer></script>
+  </head>
+  <body class="gift-access-theme" data-mood="gifts">
+    <div class="scene" aria-hidden="true">
+      <div class="orb orb-blue"></div>
+      <div class="orb orb-pink"></div>
+      <div class="grain"></div>
+      <div class="bubble-field"></div>
+    </div>
+    <header>
+      <a class="brand" href="index.html">Jehmara & Myrtho ♡</a
+      ><span class="header-tag">UNE ATTENTION POUR BÉBÉ</span>
+    </header>
+    <main>
+      <section class="card" data-palette="blue" aria-labelledby="access-title">
+        <span class="pill">La liste reste ouverte pour toi</span>
+        <h1 id="access-title">
+          Retrouver tes cadeaux,<br />et tes nouvelles idées.
+        </h1>
+        <p class="copy" id="access-greeting">On retrouve ta liste…</p>
+        <p id="access-message" role="status" aria-live="polite"></p>
+        <div id="access-content" hidden>
+          <section class="access-existing" aria-labelledby="existing-title">
+            <h2 id="existing-title">Déjà gardés de côté pour toi</h2>
+            <ul id="existing-gifts" class="confirmation-list"></ul>
+            <p id="existing-proposal" class="small"></p>
+          </section>
+          <div class="access-toolbar">
+            <p id="access-updated" class="small"></p>
+            <button type="button" class="btn secondary" id="access-refresh">
+              Actualiser la liste
+            </button>
+          </div>
+          <form id="access-form">
+            <h2>Tu as envie d’ajouter une petite attention ?</h2>
+            <p class="copy">
+              Tu peux choisir plusieurs idées ou nous proposer autre chose. Tes
+              premiers cadeaux restent réservés pour toi. Et bien sûr, rien ne
+              t’oblige à en ajouter.
+            </p>
+            <div id="access-main-gifts"></div>
+            <section class="other-gifts-invite">
+              <h3>Les autres cadeaux</h3>
+              <p class="small">
+                Les équipements plus importants restent dans une liste à part,
+                uniquement si tu as envie de la découvrir.
+              </p>
+              <button
+                type="button"
+                class="btn secondary"
+                id="access-big-open"
+                aria-haspopup="dialog"
+              >
+                Voir les autres cadeaux
+              </button>
+              <div id="access-big-gifts" hidden></div>
+            </section>
+            <label for="access-proposal">Je propose de donner autre chose</label
+            ><textarea
+              id="access-proposal"
+              maxlength="500"
+              rows="3"
+              placeholder="Dis-nous ta nouvelle idée de cadeau…"
+            ></textarea>
+            <p class="small" id="access-proposal-limit"></p>
+            <div class="actions">
+              <button class="btn" id="access-submit" type="submit">
+                Confirmer mes ajouts →
+              </button>
+            </div>
+          </form>
+        </div>
+        <p class="small">
+          13 décembre 2026 · Pèlerin 6 · Avec toute notre affection
+        </p>
+      </section>
+    </main>
+    <dialog
+      class="other-gifts-dialog"
+      id="access-big-dialog"
+      aria-labelledby="access-big-title"
+    >
+      <span class="pill">Seulement si tu en as envie</span>
+      <h2 id="access-big-title">Es-tu sûre de vouloir voir cette liste ?</h2>
+      <p>
+        Elle contient des équipements plus importants. Tu n’as absolument aucune
+        obligation d’en offrir un. Un cadeau à plusieurs peut aussi être réservé
+        par une seule personne pour le groupe.
+      </p>
+      <div class="actions">
+        <button type="button" class="btn" id="access-big-yes">
+          Oui, je veux voir</button
+        ><button type="button" class="btn quiet" id="access-big-no" autofocus>
+          Non, je reste sur la liste principale
+        </button>
+      </div>
+    </dialog>
+  </body>
+</html>

@@ -44,3 +44,7 @@ Servir le dossier à la racine d’un hébergement statique HTTPS. Le dépôt Gi
 ## Dernière mise à jour Supabase
 
 Sur la base existante, installer `sql/supabase-migration-admin-reset.sql` si nécessaire, puis `sql/supabase-migration-identite-parcours.sql`. Ne pas réexécuter les anciennes migrations ni `sql/supabase.sql`. Ces scripts installent les fonctions sans supprimer les réponses.
+
+## Accès cadeaux de Marie Gaelle Mentor
+
+Après `sql/supabase-migration-acces-cadeaux.sql`, sa fiche admin permet de récupérer un lien personnel vers `cadeaux.html`. Ce lien donne une consultation continue et des ajouts à sa réponse existante ; il conserve les premiers cadeaux et les propositions, sans ouvrir de second formulaire. Le catalogue commun aux deux parcours est défini dans `js/gift-catalog.js`. Voir `docs/ADMIN.md` pour l’installation et le partage du lien.

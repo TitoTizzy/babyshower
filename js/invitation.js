@@ -20,124 +20,15 @@ const state = {
   submitting: false,
   otherGiftsOpen: false,
   remembered: false,
+  giftAccessToken: null,
 };
 const screen = document.getElementById("screen");
-const giftGroups = [
-  {
-    title: "Vêtements et accessoires",
-    icon: "body",
-    items: [
-      "Bodies et pyjamas (tailles 0–3 et 3–6 mois)",
-      "Chaussettes et moufles",
-      "Bonnets pour nouveau-né",
-      "Bavoirs",
-      "Tenues de sortie",
-      "Langes en coton",
-    ],
-  },
-  {
-    title: "Bain et soins",
-    icon: "cloth",
-    items: [
-      "Serviette de bain à capuche",
-      "Débarbouillettes",
-      "Soin lavant doux pour bébé — corps et cheveux",
-      "Lotion hydratante adaptée aux nourrissons",
-      "Peigne ou brosse pour bébé",
-      "Petite trousse de soin — thermomètre et lime à ongles",
-    ],
-  },
-  {
-    title: "Change et hygiène",
-    icon: "cloth",
-    items: [
-      "Couches",
-      "Lingettes adaptées aux bébés",
-      "Crème protectrice pour le change",
-      "Alèses imperméables lavables",
-    ],
-  },
-  {
-    title: "Alimentation",
-    icon: "bottle",
-    items: ["Biberons", "Brosse pour biberon"],
-  },
-  {
-    title: "Équipement et rangement",
-    icon: "cloth",
-    items: ["Moustiquaire pour le parc", "Panier à vêtements"],
-  },
-  {
-    title: "Sorties",
-    icon: "body",
-    items: [
-      "Sac à langer",
-      "Tapis à langer nomade",
-      "Pochette pour les vêtements de rechange",
-      "Pochette isotherme pour biberons",
-      "Petite couverture pour les déplacements",
-      "Pare-soleil pour les vitres de la voiture",
-    ],
-  },
-  {
-    title: "Éveil",
-    icon: "toy",
-    items: [
-      "Hochet léger, facile à saisir",
-      "Livre en tissu",
-      "Cartes ou livre d’images à fort contraste",
-      "Jouet de dentition",
-      "Jouet sensoriel avec différentes textures",
-      "Petit miroir incassable conçu pour bébé",
-      "Jouets de bain faciles à nettoyer",
-    ],
-  },
-  {
-    title: "Pour maman",
-    icon: "bib",
-    items: [
-      "Coussin d’allaitement ou de soutien pour les repas de bébé",
-      "Soutiens-gorge d’allaitement",
-      "Coussinets d’allaitement",
-      "Sacs de conservation du lait maternel",
-      "Organisateur à garder près du fauteuil ou du lit",
-      "Grande gourde facile à ouvrir d’une main",
-      "Veilleuse à lumière réglable",
-    ],
-  },
-  {
-    title: "Autres cadeaux",
-    icon: "toy",
-    big: true,
-    items: [
-      "Parc pour bébé",
-      "Matelas compatible avec le parc",
-      "Tire-lait",
-      "Porte-bébé",
-      "Poussette",
-      "Siège auto adapté dès la naissance",
-      "Fauteuil confortable avec soutien du dos",
-      "Repose-pieds",
-      "Tapis d’éveil",
-      "Arche d’éveil",
-    ],
-  },
-];
+const { groups: giftGroups, sketchPaths } = window.BABY_SHOWER_GIFT_CATALOG;
 const giftList = giftGroups.flatMap((group) => group.items);
 const giftSketches = giftGroups.flatMap((group) =>
   group.items.map(() => group.icon),
 );
-const sketchPaths = {
-  bear: '<circle cx="25" cy="21" r="11" fill="#e4d4f5"/><circle cx="75" cy="21" r="11" fill="#e4d4f5"/><path d="M22 40c-8-35 66-35 57 0-2 20-56 24-57 0Z" fill="#f6eefb"/><ellipse cx="50" cy="77" rx="26" ry="29" fill="#f4eafa"/><ellipse cx="50" cy="77" rx="16" ry="19" fill="#ffffff70"/><ellipse cx="20" cy="70" rx="10" ry="18" transform="rotate(25 20 70)" fill="#f4eafa"/><ellipse cx="80" cy="70" rx="10" ry="18" transform="rotate(-25 80 70)" fill="#f4eafa"/><ellipse cx="29" cy="101" rx="15" ry="12" fill="#e8dcf6"/><ellipse cx="71" cy="101" rx="15" ry="12" fill="#e8dcf6"/><path d="M37 36h1m24 0h1m-18 8 5 4 5-4Zm5 4v6m-6-2q6 7 12 0M40 62l10 6 10-6v12l-10-6-10 6Z"/><path d="M33 43h-3m37 0h3" stroke="#d58ead"/>',
-  baby: '<path d="M24 58Q6 78 30 111q20 14 41-1Q96 77 75 58" fill="#fff5df"/><path d="M26 60q23 15 48 0M24 68l44 39M77 69l-46 41M30 89l30 24" stroke="#a99578"/><circle cx="37" cy="77" r="3" fill="#bfd7f4" stroke="none"/><circle cx="64" cy="82" r="3" fill="#f0bdd1" stroke="none"/><circle cx="46" cy="100" r="2.5" fill="#f0bdd1" stroke="none"/><circle cx="60" cy="99" r="2.5" fill="#bfd7f4" stroke="none"/><circle cx="50" cy="39" r="26" fill="#fff4ed"/><path d="M24 35q-8-7-9 3t10 10m50-13q9-7 10 3t-10 10M44 14q-2-11 7-10t-2 10M36 39q4-5 8 0m13 0q4-5 8 0m-19 9q5 7 10 0"/><path d="M33 47h4m26 0h4" stroke="#d58ead"/>',
-  bib: '<path d="M24 19 36 9q14 30 28 0l12 10 9 38q1 47-35 49-36-2-35-49Z" fill="#fbe3ef"/><path d="M28 22 20 60q-1 38 30 40 31-2 30-40l-8-38M44 52q-9-11-16-2t22 27q31-18 22-27t-16 2l-6 7Z"/><circle cx="32" cy="19" r="2"/>',
-  bottle:
-    '<path d="M32 38h36l7 61q0 13-25 13t-25-13Z" fill="#e9f1ff"/><path d="M31 38v-8h38v8M35 30V20q0-6 9-6V6h12v8q9 0 9 6v10M31 88h42"/><path d="M36 55h9m-9 12h6m-6 12h9"/><path d="M52 73q-8-11-13-4t16 17q24-12 16-19t-13 6Z" fill="#f1cede"/>',
-  toy: '<circle cx="50" cy="35" r="24" fill="#e3edff"/><circle cx="50" cy="35" r="13" fill="#fff9"/><path d="M40 58 34 99q0 11 16 11t16-11L60 58Z" fill="#f6d9e9"/><path d="m50 20 4 9 10 1-8 6 2 10-8-5-8 5 2-10-8-6 10-1ZM38 87h24"/>',
-  body: '<path d="m31 12 19 6 19-6 21 23-15 14-10-11v47l-15 23-15-23V38L25 49 10 35Z" fill="#e9e7fb"/><path d="M31 12q19 25 38 0M35 85q15 10 30 0"/><circle cx="50" cy="95" r="2"/><path d="M43 48q-8-8-12-1t19 19q24-14 19-20t-12 2l-7 6Z"/>',
-  cloth:
-    '<path d="M23 20h57v82H23q-11 0-11-11V31q0-11 11-11Z" fill="#e4ecfa"/><path d="M23 20v82M29 31h40M29 40h30M29 91h40"/><path d="M36 62q8-14 16 0t16 0M37 74q7-13 14 0t16 0" stroke="#b780a2"/>',
-};
+
 function sketchIcon(type) {
   return (
     '<svg viewBox="0 0 100 120" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
@@ -457,6 +348,7 @@ function render() {
       html =
         '<span class="pill">C’est déjà bien reçu</span><h2>On a déjà<br>ta réponse !</h2><p class="copy">Merci d’avoir pris le temps de nous répondre. Tout est enregistré, pas besoin de recommencer. Si tu veux changer quelque chose, écris-nous directement.</p><div class="actions">' +
         button("Retrouver la surprise", "reveal-choice") +
+        personalGiftButton() +
         "</div>";
       break;
     case "distant-attendance":
@@ -513,7 +405,7 @@ function render() {
       break;
     case "submitted":
       html = state.saved
-        ? `<div class="submission-success"><div class="success-check" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="m11 25 9 9 18-20"/></svg></div><span class="confirmation-label">Confirmation</span><h2>C’est bien reçu !</h2><p class="copy">Merci ${escapeHtml(state.fullName)} ! Ta réponse a bien été enregistrée${state.selectedGifts.length ? " et tes cadeaux sont réservés" : ""}.</p>${state.selectedGifts.length ? `<ul class="confirmation-list" aria-label="Cadeaux réservés">${state.selectedGifts.map((g) => `<li>${escapeHtml(g)}</li>`).join("")}</ul>` : ""}${state.proposal ? '<p class="copy">On a aussi bien reçu ta proposition de cadeau.</p>' : ""}<p class="small">Pas besoin de remplir l’invitation une deuxième fois. Si tu veux changer quelque chose, écris-nous directement.</p><div class="actions">${button(state.residenceZone !== "metro" || state.attending || state.wantsGift ? "Découvrir la suite →" : "Terminer →", "after-submit")}</div></div>`
+        ? `<div class="submission-success"><div class="success-check" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="m11 25 9 9 18-20"/></svg></div><span class="confirmation-label">Confirmation</span><h2>C’est bien reçu !</h2><p class="copy">Merci ${escapeHtml(state.fullName)} ! Ta réponse a bien été enregistrée${state.selectedGifts.length ? " et tes cadeaux sont réservés" : ""}.</p>${state.selectedGifts.length ? `<ul class="confirmation-list" aria-label="Cadeaux réservés">${state.selectedGifts.map((g) => `<li>${escapeHtml(g)}</li>`).join("")}</ul>` : ""}${state.proposal ? '<p class="copy">On a aussi bien reçu ta proposition de cadeau.</p>' : ""}<p class="small">Pas besoin de remplir l’invitation une deuxième fois. Si tu veux changer quelque chose, écris-nous directement.</p><div class="actions">${button(state.residenceZone !== "metro" || state.attending || state.wantsGift ? "Découvrir la suite →" : "Terminer →", "after-submit")}${personalGiftButton()}</div></div>`
         : `<div class="preview-confirmation"><h2>Aperçu uniquement</h2><p>Cette réponse n’a pas été enregistrée et aucun cadeau n’a été réservé.</p></div><div class="actions">${button("Voir la suite de l’aperçu", "after-submit")}</div>`;
       break;
     case "already-submitted":
@@ -777,6 +669,7 @@ async function saveResponse() {
   }
   state.saved = true;
   rememberSubmission();
+  void loadPersonalGiftAccess(state.id);
 }
 const card = document.querySelector(".card");
 card.addEventListener("pointermove", (e) => {
@@ -852,6 +745,7 @@ async function checkBrowserMemory() {
       state.saved = true;
       state.remembered = true;
       state.step = "remembered";
+      void loadPersonalGiftAccess(token);
     } else {
       try {
         localStorage.removeItem(receiptKey);
@@ -943,3 +837,45 @@ window.addEventListener("pageshow", (event) => {
 render();
 screen.classList.add("entering");
 checkBrowserMemory();
+
+function personalGiftButton() {
+  return state.giftAccessToken
+    ? '<a class="btn secondary" data-personal-gift-link href="cadeaux.html#' +
+        state.giftAccessToken +
+        '">Retrouver ou compléter mes cadeaux →</a>'
+    : "";
+}
+async function loadPersonalGiftAccess(token) {
+  try {
+    const response = await fetch(
+      config.supabaseUrl.replace(/\/$/, "") +
+        "/rest/v1/rpc/baby_shower_personal_gift_access",
+      {
+        method: "POST",
+        headers: {
+          apikey: config.supabaseKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ p_token: token }),
+        signal: AbortSignal.timeout(8000),
+        cache: "no-store",
+      },
+    );
+    if (!response.ok) return;
+    const access = await response.json();
+    if (
+      !state.saved ||
+      (readReceipt() !== token && state.id !== token) ||
+      !/^[0-9a-f-]{36}$/i.test(access || "")
+    )
+      return;
+    state.giftAccessToken = access;
+    if (
+      ["remembered", "submitted"].includes(state.step) &&
+      !screen.querySelector("[data-personal-gift-link]")
+    )
+      screen
+        .querySelector(".actions")
+        ?.insertAdjacentHTML("beforeend", personalGiftButton());
+  } catch {}
+}

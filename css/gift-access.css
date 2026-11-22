@@ -1,0 +1,123 @@
+body.gift-access-theme main {
+  display: block;
+  max-width: 960px;
+  margin: 16px auto 45px;
+  padding: 0 24px;
+  min-height: 0;
+}
+.gift-access-theme .card {
+  padding: 35px 40px;
+  min-height: 0;
+}
+.gift-access-theme h1 {
+  font-size: clamp(32px, 4.2vw, 50px);
+  line-height: 1.18;
+  margin: 20px 0;
+}
+.gift-access-theme h2 {
+  font-size: clamp(24px, 3vw, 31px);
+  letter-spacing: -0.035em;
+}
+.gift-access-theme .brand {
+  color: #fff;
+  text-decoration: none;
+}
+.gift-access-theme .access-existing {
+  padding: 22px;
+  border: 1px solid #a7c7ff70;
+  border-radius: 19px;
+  background: #6d9af322;
+  margin: 26px 0;
+}
+.access-existing h2 {
+  margin-top: 0;
+}
+.access-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin: 20px 0;
+}
+.access-toolbar .btn {
+  min-height: 48px;
+  font-size: 15px;
+}
+.gift-access-theme .gift-tile {
+  height: 100%;
+  cursor: pointer;
+}
+.gift-access-theme .gift-tile.reserved {
+  cursor: default;
+}
+.gift-access-theme .gift-tile.own {
+  border-color: #7edbb78c;
+  background: #2b9c6633;
+  opacity: 1;
+}
+.gift-access-theme .gift-tile.own .gift-status {
+  color: #a4f5cc;
+}
+.gift-access-theme .confirmation-list {
+  margin-bottom: 0;
+}
+.gift-access-theme #existing-proposal {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.gift-access-theme #access-message {
+  padding: 0;
+  overflow-wrap: anywhere;
+  scroll-margin-top: 20px;
+}
+.gift-access-theme #access-message.success {
+  padding: 18px 20px;
+  border: 1px solid #7befae88;
+  border-radius: 16px;
+  background: #137c4d50;
+  color: #c6ffdd;
+  font-weight: 600;
+}
+.gift-access-theme #access-message.error {
+  color: #ffc5dd;
+}
+.gift-access-theme [hidden] {
+  display: none !important;
+}
+.gift-access-theme .gifts {
+  align-items: stretch;
+}
+@media (max-width: 760px) {
+  body.gift-access-theme main {
+    padding: 0 14px;
+    margin: 8px auto 30px;
+  }
+  .gift-access-theme .card {
+    padding: 25px 20px;
+  }
+  .gift-access-theme h1 {
+    font-size: 34px;
+  }
+  .gift-access-theme .access-existing {
+    padding: 17px;
+  }
+  .access-toolbar {
+    gap: 8px;
+  }
+  .access-toolbar .btn {
+    width: 100%;
+  }
+  .gift-access-theme header {
+    padding: 20px;
+  }
+  .gift-access-theme .header-tag {
+    display: none;
+  }
+  .gift-access-theme .gift-tile {
+    padding: 12px 9px;
+  }
+  .gift-access-theme .gift-text {
+    font-size: 14px;
+  }
+}

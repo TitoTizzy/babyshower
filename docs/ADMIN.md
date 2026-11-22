@@ -98,3 +98,11 @@ L’administration compte comme présent un proche hors zone ou à l’étranger
 ## Vérifications de session persistante
 
 Le mot de passe n’est jamais mémorisé. Recharger ou fermer/rouvrir le navigateur avant sept jours d’inactivité restaure la session et recharge les données depuis le serveur. Les réponses privées ne sont pas enregistrées dans localStorage. Une erreur réseau ne supprime pas les jetons ; une session révoquée ou un compte devenu non autorisé provoque une déconnexion. Aucune migration SQL supplémentaire n’est nécessaire pour la mémorisation.
+
+## Accès personnel de Marie Gaelle Mentor aux cadeaux
+
+Installer `sql/supabase-migration-acces-cadeaux.sql` sur la base existante. La migration prépare un accès pour la réponse dont le nom complet normalisé est « Marie Gaelle Mentor ». Elle ne change aucun cadeau. Après connexion à l’admin, sa fiche affiche « Lien personnel pour ses cadeaux » : cliquer puis copier le lien pour le lui transmettre. Ne pas publier ce lien : il donne accès à ses choix et permet d’en ajouter.
+
+Le lien ouvre `cadeaux.html#JETON` sur n’importe quel navigateur. Il permet la consultation continue, les ajouts multiples et une nouvelle proposition libre. Les premiers cadeaux et propositions sont conservés. Les cadeaux des autres restent indisponibles, et l’ajout est atomique et idempotent. Aucun second formulaire n’est créé, aucune coordonnée ni présence ne peut être modifiée. Seuls ses propres cadeaux et le catalogue de disponibilités sont retournés, jamais les coordonnées ou noms des autres invités. Le choix d’afficher les gros cadeaux reste confirmé dans un pop-up. La proposition totale conserve la limite de 500 caractères.
+
+Depuis son navigateur initial, le reçu de sa réponse fait aussi apparaître « Retrouver ou compléter mes cadeaux » après confirmation ou à sa prochaine visite. Les autres invités gardent le blocage habituel. Supprimer sa réponse dans le reset révoque aussi ce lien et efface l’historique des ajouts associés, grâce aux clés étrangères en cascade. Les tables d’accès et d’ajouts sont privées ; les fonctions SQL vérifient le jeton aléatoire personnel, et la création du lien depuis l’admin vérifie les droits de l’organisateur.
