@@ -52,3 +52,9 @@ Après `sql/supabase-migration-acces-cadeaux.sql`, sa fiche admin permet de réc
 ## Résumé personnel au retour
 
 Installer `sql/supabase-migration-resume-reponse.sql` sur la base existante pour afficher le résumé des choix au retour sur le lien depuis le navigateur utilisé pour répondre. Le résumé est relu sur le serveur à partir du reçu personnel, sans créer une nouvelle réponse.
+
+## Compatibilité Safari
+
+`js/browser-compat.js` est chargé avant les scripts applicatifs sur les trois pages. Il fournit un UUID sécurisé via `crypto.getRandomValues` lorsque `randomUUID` manque, une expiration des requêtes sans dépendre de `AbortSignal.timeout`, et un repli accessible pour les dialogues. Les styles de sélection et des deux choix fonctionnent sans `:has()`. Les bulles restent visibles si l’animation native n’est pas disponible. Aucun reçu n’est créé avec `Math.random`.
+
+Adresse publique de l’invitation : https://titotizzy.github.io/babyshower/

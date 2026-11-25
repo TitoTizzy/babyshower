@@ -12,8 +12,12 @@
     bigOpen = false,
     pending = null;
   const selection = new Set();
+  const isReserved = (name) => {
+    const gift = data && data.gifts.find((g) => g.name === name);
+    return Boolean(gift && gift.reserved);
+  };
   const escape = (value) =>
-    String(value ?? "").replace(
+    String(value == null ? "" : value).replace(
       /[&<>"']/g,
       (c) =>
         ({
@@ -38,13 +42,13 @@
           "Content-Type": "application/json",
         },
         body: JSON.stringify(body),
-        signal: AbortSignal.timeout(15000),
+        signal: window.BabyShowerBrowser.timeoutSignal(15000),
         cache: "no-store",
         credentials: "omit",
       },
     );
     const result = await response.json().catch(() => null);
-    if (!response.ok) throw new Error(result?.message || "request_failed");
+    if (!response.ok) throw new Error((result && result.message) || "request_failed");
     return result;
   }
   function validate(value) {
@@ -93,7 +97,7 @@
         ? "Aucun cadeau réservé pour le moment."
         : "";
     for (const name of selection) {
-      if (data.gifts.find((g) => g.name === name)?.reserved)
+      if (isReserved(name))
         selection.delete(name);
     }
     $("access-main-gifts").innerHTML = groupMarkup(false);
@@ -127,7 +131,7 @@
       .forEach(
         (i) =>
           (i.disabled =
-            value || data.gifts.find((g) => g.name === i.value)?.reserved),
+            value || isReserved(i.value)),
       );
     $("access-proposal").disabled =
       value || $("access-proposal").maxLength === 0;
@@ -140,7 +144,7 @@
       data = validate(
         await rpc("baby_shower_gift_access_snapshot", {
           p_access_token: accessToken,
-          p_request_token: pending?.id || null,
+          p_request_token: (pending && pending.id) || null,
         }),
       );
       render();
@@ -176,7 +180,7 @@
     );
     $("access-message").scrollIntoView({
       behavior: matchMedia("(prefers-reduced-motion:reduce)").matches
-        ? "instant"
+        ? "auto"
         : "smooth",
       block: "start",
     });
@@ -225,7 +229,12 @@
       }
       const signature = JSON.stringify({ gifts, proposal });
       if (!pending || pending.signature !== signature)
-        pending = { id: crypto.randomUUID(), signature, gifts, proposal };
+        pending = {
+          id: window.BabyShowerBrowser.randomId(),
+          signature,
+          gifts,
+          proposal,
+        };
       const result = await rpc("baby_shower_add_personal_gifts", {
         p_access_token: accessToken,
         p_request_token: pending.id,
@@ -263,18 +272,18 @@
   });
   $("access-refresh").addEventListener("click", () => load());
   $("access-big-open").addEventListener("click", () =>
-    $("access-big-dialog").showModal(),
+    window.BabyShowerBrowser.openDialog($("access-big-dialog")),
   );
   $("access-big-no").addEventListener("click", () =>
-    $("access-big-dialog").close(),
+    window.BabyShowerBrowser.closeDialog($("access-big-dialog")),
   );
   $("access-big-yes").addEventListener("click", () => {
     bigOpen = true;
-    $("access-big-dialog").close();
+    window.BabyShowerBrowser.closeDialog($("access-big-dialog"));
     render();
     $("access-big-gifts").scrollIntoView({
       behavior: matchMedia("(prefers-reduced-motion:reduce)").matches
-        ? "instant"
+        ? "auto"
         : "smooth",
       block: "start",
     });

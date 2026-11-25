@@ -101,7 +101,7 @@ async function api(path, { body, token, signal, retry = true } = {}) {
       ...(token ? { Authorization: "Bearer " + token } : {}),
     },
     body: JSON.stringify(body || {}),
-    signal: signal || AbortSignal.timeout(15000),
+    signal: signal || window.BabyShowerBrowser.timeoutSignal(15000),
     cache: "no-store",
     credentials: "omit",
   });
@@ -384,7 +384,8 @@ function clearResetSelection() {
   $("reset-confirmation").value = "";
   $("reset-error").textContent = "";
   $("reset-submit").disabled = true;
-  if ($("reset-dialog").open) $("reset-dialog").close();
+  if ($("reset-dialog").open)
+    window.BabyShowerBrowser.closeDialog($("reset-dialog"));
   updateResetSelection();
 }
 $("response-list").addEventListener("change", (event) => {
@@ -423,14 +424,14 @@ $("reset-open").addEventListener("click", () => {
   $("reset-confirmation").value = "";
   $("reset-error").textContent = "";
   $("reset-submit").disabled = true;
-  $("reset-dialog").showModal();
+  window.BabyShowerBrowser.openDialog($("reset-dialog"));
 });
 $("reset-confirmation").addEventListener("input", () => {
   $("reset-submit").disabled =
     resetBusy || $("reset-confirmation").value !== "SUPPRIMER";
 });
 $("reset-cancel").addEventListener("click", () => {
-  if (!resetBusy) $("reset-dialog").close();
+  if (!resetBusy) window.BabyShowerBrowser.closeDialog($("reset-dialog"));
 });
 $("reset-dialog").addEventListener("cancel", (event) => {
   if (resetBusy) event.preventDefault();

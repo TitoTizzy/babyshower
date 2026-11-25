@@ -20,10 +20,11 @@
   const transform = (point, scale = 1) =>
     `translate3d(${point.x}vw, ${point.y}vh, 0) scale(${scale})`;
   function drift(bubble) {
-    if (reducedMotion.matches) return;
+    if (reducedMotion.matches || typeof bubble.element.animate !== "function")
+      return;
     const points = [bubble.point];
     for (let i = 0; i < 4; i++) {
-      const previous = points.at(-1);
+      const previous = points[points.length - 1];
       points.push({
         x: clamp(previous.x + random(-24, 24), 1, 96),
         y: clamp(previous.y + random(-26, 26), 1, 96),
@@ -31,7 +32,10 @@
     }
     bubble.animation = bubble.element.animate(
       points.map((point, index) => ({
-        transform: transform(point, index === 0 || index === 4 ? 1 : random(0.85, 1.12)),
+        transform: transform(
+          point,
+          index === 0 || index === 4 ? 1 : random(0.85, 1.12),
+        ),
         opacity: index === 0 || index === 4 ? 0.35 : random(0.25, 0.6),
         offset: index / 4,
       })),
@@ -42,7 +46,7 @@
       },
     );
     bubble.animation.onfinish = () => {
-      bubble.point = points.at(-1);
+      bubble.point = points[points.length - 1];
       bubble.element.style.transform = transform(bubble.point);
       bubble.animation.cancel();
       drift(bubble);
@@ -66,10 +70,10 @@
       else bubble.animation.play();
     }
   }
-  reducedMotion.addEventListener("change", start);
+  window.BabyShowerBrowser.listenMedia(reducedMotion, start);
   document.addEventListener("visibilitychange", syncVisibility);
   window.addEventListener("pagehide", () => {
-    for (const bubble of bubbles) bubble.animation?.pause();
+    for (const bubble of bubbles) if (bubble.animation) bubble.animation.pause();
   });
   window.addEventListener("pageshow", syncVisibility);
   start();

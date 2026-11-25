@@ -15,7 +15,7 @@ const state = {
   selectedGifts: [],
   proposal: "",
   giftNotice: "",
-  id: crypto.randomUUID ? crypto.randomUUID() : null,
+  id: window.BabyShowerBrowser.randomId(),
   saved: false,
   submitting: false,
   otherGiftsOpen: false,
@@ -69,7 +69,7 @@ function revealOtherGifts() {
     heading.setAttribute("tabindex", "-1");
     heading.focus({ preventScroll: true });
     heading.scrollIntoView({
-      behavior: motionReduced.matches ? "instant" : "smooth",
+      behavior: motionReduced.matches ? "auto" : "smooth",
       block: "start",
     });
   }
@@ -132,7 +132,7 @@ async function refreshGifts() {
           "Content-Type": "application/json",
         },
         body: "{}",
-        signal: AbortSignal.timeout(15000),
+        signal: window.BabyShowerBrowser.timeoutSignal(15000),
       },
     );
     if (!response.ok) throw new Error("availability");
@@ -224,7 +224,7 @@ function go(step, direction = 1) {
       requestAnimationFrame(() =>
         document
           .querySelector(".questionnaire-stage")
-          .scrollIntoView({ behavior: "instant", block: "start" }),
+          .scrollIntoView({ behavior: "auto", block: "start" }),
       );
     }
     if (!motionReduced.matches) {
@@ -240,7 +240,9 @@ function go(step, direction = 1) {
     if (step === "reveal") celebrate();
     if (step === "gifts") refreshGifts();
     if (step === "distant-no")
-      document.getElementById("distance-gift-dialog").showModal();
+      window.BabyShowerBrowser.openDialog(
+        document.getElementById("distance-gift-dialog"),
+      );
   };
   if (motionReduced.matches) {
     finish();
@@ -445,8 +447,11 @@ function render() {
           ? "baby"
           : "bear",
     );
-  screen.querySelector("h2")?.setAttribute("tabindex", "-1");
-  screen.querySelector("h2")?.focus({ preventScroll: true });
+  const heading = screen.querySelector("h2");
+  if (heading) {
+    heading.setAttribute("tabindex", "-1");
+    window.BabyShowerBrowser.focus(heading);
+  }
 }
 screen.addEventListener("submit", (e) => {
   e.preventDefault();
@@ -561,13 +566,17 @@ screen.addEventListener("click", async (e) => {
     return;
   }
   if (a === "distance-gift-open") {
-    document.getElementById("distance-gift-dialog").showModal();
+    window.BabyShowerBrowser.openDialog(
+      document.getElementById("distance-gift-dialog"),
+    );
     return;
   }
   if (a === "other-gifts") {
     captureGiftForm();
     document.body.classList.add("other-gifts-open");
-    document.getElementById("other-gifts-dialog").showModal();
+    window.BabyShowerBrowser.openDialog(
+      document.getElementById("other-gifts-dialog"),
+    );
     return;
   }
   if (a === "after-submit") {
@@ -596,7 +605,7 @@ screen.addEventListener("click", async (e) => {
   }
   if (a === "gift-end") {
     document.getElementById("gift-finish").scrollIntoView({
-      behavior: motionReduced.matches ? "instant" : "smooth",
+      behavior: motionReduced.matches ? "auto" : "smooth",
       block: "start",
     });
     return;
@@ -631,7 +640,7 @@ screen.addEventListener("click", async (e) => {
   if (a === "yes" || a === "no" || a === "confirm-route") {
     if (a !== "confirm-route") state.attending = a === "yes";
     state.companion =
-      state.attending && Boolean(document.getElementById("companion")?.checked);
+      state.attending && Boolean((document.getElementById("companion") || {}).checked);
     await submitInvitation(btn);
     return;
   }
@@ -662,7 +671,7 @@ async function saveResponse() {
       p_proposal: state.proposal,
       p_selected_gifts: state.selectedGifts,
     }),
-    signal: AbortSignal.timeout(15000),
+    signal: window.BabyShowerBrowser.timeoutSignal(15000),
   });
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
@@ -740,7 +749,7 @@ async function checkBrowserMemory() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ p_token: token }),
-        signal: AbortSignal.timeout(15000),
+        signal: window.BabyShowerBrowser.timeoutSignal(15000),
         cache: "no-store",
       },
     );
@@ -795,11 +804,15 @@ async function submitInvitation(
   button.textContent = "Envoi en cours…";
   try {
     await saveResponse();
-    document.getElementById("distance-gift-dialog").close();
+    window.BabyShowerBrowser.closeDialog(
+      document.getElementById("distance-gift-dialog"),
+    );
     go(directReveal ? "reveal-choice" : "submitted");
   } catch (err) {
     if (err.message === "response_already_submitted") {
-      document.getElementById("distance-gift-dialog").close();
+      window.BabyShowerBrowser.closeDialog(
+        document.getElementById("distance-gift-dialog"),
+      );
       go("already-submitted");
     } else if (err.message === "gift_unavailable") {
       state.giftNotice =
@@ -876,7 +889,7 @@ async function loadPersonalGiftAccess(token) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ p_token: token }),
-        signal: AbortSignal.timeout(8000),
+        signal: window.BabyShowerBrowser.timeoutSignal(8000),
         cache: "no-store",
       },
     );
@@ -892,10 +905,10 @@ async function loadPersonalGiftAccess(token) {
     if (
       ["remembered", "submitted"].includes(state.step) &&
       !screen.querySelector("[data-personal-gift-link]")
-    )
-      screen
-        .querySelector(".actions")
-        ?.insertAdjacentHTML("beforeend", personalGiftButton());
+    ) {
+      const actions = screen.querySelector(".actions");
+      if (actions) actions.insertAdjacentHTML("beforeend", personalGiftButton());
+    }
   } catch {}
 }
 
